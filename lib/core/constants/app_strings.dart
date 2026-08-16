@@ -99,7 +99,7 @@ class AppStrings {
   static const elevatorLiftDesc = 'Passenger lift available';
   static const saveBuildingDetails = 'Save Building Details';
   // Staff management
-  static const managementStaff = 'Management Staff';
+  static const managementStaff = 'Staff Managment';
   static const noStaffAdded = 'No Staff Added Yet';
   static const noStaffHint = 'Click the button below to add staff members.';
   static const addStaff = 'Add Staff';

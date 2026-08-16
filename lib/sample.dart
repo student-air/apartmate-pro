@@ -1,870 +1,231 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:apartmate/core/constants/app_colors.dart';
-import 'package:apartmate/core/constants/app_dimens.dart';
-import 'package:apartmate/core/constants/app_text_styles.dart';
-import 'package:apartmate/core/widgets/app_bottom_nav.dart';
-import 'package:apartmate/core/widgets/app_responsive_container.dart';
-import 'package:apartmate/presentation/dashboard/controllers/dashboard_controller.dart';
-import 'package:apartmate/core/widgets/send_update_sheet.dart';
-import 'package:apartmate/core/widgets/app_skeletons.dart';
-import 'package:lottie/lottie.dart';
+// void _showStaffFormSheet(BuildContext context) {
+//     Get.bottomSheet(
+//       Container(
+//         decoration: const BoxDecoration(
+//           color: AppColors.surface,
+//           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+//         ),
+//         child: SafeArea(
+//           top: false,
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               // ── Dark header (same style as File a complaint) ──
+//               Container(
+//                 width: double.infinity,
+//                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+//                 decoration: const BoxDecoration(
+//                   color: AppColors.primaryDark,
+//                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+//                 ),
+//                 child: Column(
+//                   children: [
+//                     // Handle bar
+//                     Container(
+//                       width: 40,
+//                       height: 4,
+//                       decoration: BoxDecoration(
+//                         color: AppColors.textOnDark.withValues(alpha: 0.35),
+//                         borderRadius: BorderRadius.circular(2),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 16),
+//                     Row(
+//                       children: [
+//                         Container(
+//                           width: 44,
+//                           height: 44,
+//                           decoration: BoxDecoration(
+//                             color: AppColors.accentGreen.withValues(alpha: 0.15),
+//                             borderRadius: BorderRadius.circular(12),
+//                           ),
+//                           child: const Icon(
+//                             Icons.badge_rounded,
+//                             color: AppColors.accentGreen,
+//                             size: 22,
+//                           ),
+//                         ),
+//                         const SizedBox(width: 14),
+//                         Expanded(
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Text(
+//                                 controller.isEditing
+//                                     ? 'Edit Staff Member'
+//                                     : AppStrings.addStaffMember,
+//                                 style: AppTextStyles.h4.copyWith(
+//                                   color: AppColors.textOnDark,
+//                                   fontWeight: FontWeight.w700,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 2),
+//                               Text(
+//                                 'Add staff details for your society',
+//                                 style: AppTextStyles.bodySmall.copyWith(
+//                                   color: AppColors.textOnDarkMuted,
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ),
+//               ),
 
-class DashboardView extends GetView<DashboardController> {
-  const DashboardView({super.key});
+//               // ── Form body ──
+//               Padding(
+//                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+//                 child: Obx(
+//                   () => AppShakeOnTrigger(
+//                     trigger: controller.staffShakeTrigger.value,
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.stretch,
+//                       children: [
+//                         // Full Name
+//                         AppTextField(
+//                           label: AppStrings.fullName,
+//                           hint: AppStrings.fullNameHint,
+//                           controller: controller.nameCtrl,
+//                         ),
+//                         const SizedBox(height: 16),
 
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.refreshRequestCounts();
-    });
+//                         // Phone Number
+//                         AppTextField(
+//                           label: AppStrings.phoneNumber,
+//                           hint: AppStrings.phoneHint,
+//                           controller: controller.phoneCtrl,
+//                           keyboardType: TextInputType.phone,
+//                         ),
+//                         Obx(() {
+//                           final error = controller.phoneError.value;
+//                           if (error == null) return const SizedBox.shrink();
+//                           return Padding(
+//                             padding: const EdgeInsets.only(top: 8),
+//                             child: Row(
+//                               children: [
+//                                 const Icon(
+//                                   Icons.error_outline,
+//                                   size: 14,
+//                                   color: AppColors.danger,
+//                                 ),
+//                                 const SizedBox(width: 4),
+//                                 Expanded(
+//                                   child: Text(
+//                                     error,
+//                                     style: AppTextStyles.bodySmall
+//                                         .copyWith(color: AppColors.danger),
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           );
+//                         }),
+//                         const SizedBox(height: 16),
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: AppAddFab(
-        onPressed: showSendUpdateSheet,
-      ),
-      bottomNavigationBar: AppBottomNav(
-        activeTab: AppNavTab.home,
-        onHome: () {},
-        onUpdates: controller.goToUpdates,
-        onRequests: controller.goToRequests,
-        onProfile: controller.goToProfile,
-      ),
-      body: SafeArea(
-        bottom: false,
-        child: Obx(() {
-          if (controller.isLoading.value) {
-            return const AppSkeletonList(itemBuilder: StaffTileSkeleton.new);
-          }
-          return RefreshIndicator(
-            color: AppColors.primaryDark,
-            onRefresh: controller.refreshAll,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: AppResponsiveContainer(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Society name + logout
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: AppColors.accentGreen,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.accentGreen.withValues(alpha: 0.7),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Obx(
-                            () => Text(
-                              controller.societyNameText.toUpperCase(),
-                              style: AppTextStyles.overline,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: controller.confirmLogout,
-                          icon: const Icon(Icons.logout_rounded, color: AppColors.danger),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.surfaceMuted,
-                            shape: const CircleBorder(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
+//                         // Role
+//                         Obx(
+//                           () => AppDropdownField<StaffRole>(
+//                             label: AppStrings.role,
+//                             value: controller.selectedRole.value,
+//                             items: StaffRole.values,
+//                             labelBuilder: (r) => r.label,
+//                             onChanged: controller.setRole,
+//                           ),
+//                         ),
+//                         Obx(() {
+//                           if (controller.selectedRole.value != StaffRole.other) {
+//                             return const SizedBox.shrink();
+//                           }
+//                           return Padding(
+//                             padding: const EdgeInsets.only(top: 16),
+//                             child: AppTextField(
+//                               label: 'Role Name',
+//                               hint: 'e.g. Gardener',
+//                               controller: controller.customRoleCtrl,
+//                             ),
+//                           );
+//                         }),
+//                         const SizedBox(height: 16),
 
-                    // Greeting + animation
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Obx(
-                            () => RichText(
-                              text: TextSpan(
-                                style: AppTextStyles.h1.copyWith(
-                                  color: AppColors.textPrimary,
-                                  height: 1.1,
-                                ),
-                                children: [
-                                  TextSpan(text: '${DashboardController.greeting},\n'),
-                                  TextSpan(
-                                    text: '${controller.ownerFirstName}.',
-                                    style: const TextStyle(color: AppColors.accentGreen),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Lottie.asset(
-                          DashboardController.greetingAnimationAsset,
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.contain,
-                          repeat: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+//                         // Info banner
+//                         // Container(
+//                         //   padding: const EdgeInsets.all(12),
+//                         //   decoration: BoxDecoration(
+//                         //     color: const Color(0xFFEFF6FF),
+//                         //     borderRadius:
+//                         //         BorderRadius.circular(AppDimens.radiusMd),
+//                         //   ),
+//                         //   child: Row(
+//                         //     crossAxisAlignment: CrossAxisAlignment.start,
+//                         //     children: [
+//                         //       Icon(
+//                         //         Icons.info_outline_rounded,
+//                         //         size: 18,
+//                         //         color: AppColors.roleAdminText,
+//                         //       ),
+//                         //       const SizedBox(width: 10),
+//                         //       Expanded(
+//                         //         child: Text(
+//                         //           'Staff will appear as Pending until they join using the society code in the user app.',
+//                         //           style: AppTextStyles.bodySmall.copyWith(
+//                         //             color: AppColors.roleAdminText,
+//                         //           ),
+//                         //         ),
+//                         //       ),
+//                         //     ],
+//                         //   ),
+//                         // ),
+//                         const SizedBox(height: 20),
 
-                    // Avatar + role
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: controller.goToProfile,
-                          child: Obx(() {
-                            final photoPath = controller.society.value?.ownerPhotoPath;
-                            final hasPhoto = photoPath != null && photoPath.isNotEmpty;
-                            return Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: AppColors.surfaceMuted,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: hasPhoto
-                                  ? ClipOval(
-                                      child: Image.file(
-                                        File(photoPath),
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : Text(
-                                      controller.ownerInitials,
-                                      style: AppTextStyles.labelMedium.copyWith(
-                                        color: AppColors.primaryDark,
-                                      ),
-                                    ),
-                            );
-                          }),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(child: Divider(color: AppColors.borderLight)),
-                        const SizedBox(width: 12),
-                        Text(
-                          controller.roleDisplay,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+//                         // Submit button
+//                         SizedBox(
+//                           height: 52,
+//                           child: ElevatedButton(
+//                             onPressed: controller.saveStaff,
+//                             style: ElevatedButton.styleFrom(
+//                               backgroundColor: AppColors.primaryDark,
+//                               elevation: 0,
+//                               shape: RoundedRectangleBorder(
+//                                 borderRadius:
+//                                     BorderRadius.circular(AppDimens.radiusFull),
+//                               ),
+//                             ),
+//                             child: Text(
+//                               controller.isEditing
+//                                   ? 'Save Staff Member'
+//                                   : AppStrings.saveStaffMember,
+//                               style: AppTextStyles.labelLarge.copyWith(
+//                                 color: AppColors.accentGreen,
+//                                 fontWeight: FontWeight.w600,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                         const SizedBox(height: 8),
 
-                    // Stat pills — 2 rows × 3
-                    Obx(
-                      () => Column(
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.villa_rounded,
-                                  value: '${controller.stats.value?.buildings ?? 0}',
-                                  label: 'Buildings',
-                                  filled: true,
-                                  onTap: controller.goToBuildings,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.report_problem_rounded,
-                                  value: '${controller.complaintsCount.value}',
-                                  label: 'Complaints',
-                                  onTap: controller.goToComplaints,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.document_scanner_rounded,
-                                  value: '${controller.residentsCount.value}',
-                                  label: 'Residents',
-                                  onTap: controller.goToResidents,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.person_2_rounded,
-                                  value: '${controller.ownersCount.value}',
-                                  label: 'Owners',
-                                  onTap: controller.goToOwners,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.groups_2_rounded,
-                                  value: '${controller.committeeCount.value}',
-                                  label: 'Committee',
-                                  onTap: controller.goToCommittee,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _StatPill(
-                                  icon: Icons.hourglass_bottom_rounded,
-                                  value: '${controller.pendingRequestsCount.value}',
-                                  label: 'Pending',
-                                  danger: true,
-                                  onTap: controller.goToRequests,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // ACTIONS + green key (copy join code)
-                    Row(
-                      children: [
-                        Text(
-                          'ACTIONS',
-                          style: AppTextStyles.overline.copyWith(
-                            color: AppColors.primaryDark,
-                          ),
-                        ),
-                        const Spacer(),
-                        Material(
-                          color: Colors.transparent,
-                          
-                        ),
-                        _JoinCodeExpandButton(onCopy: controller.copyJoinCode),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const Divider(color: AppColors.borderLight, height: 1),
-                    const SizedBox(height: 16),
-
-                    _ActionRow(
-                      icon: Icons.edit_rounded,
-                      title: 'Edit Society',
-                      subtitle: 'Manage society details',
-                      onTap: controller.goToEditSociety,
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionRow(
-                      icon: Icons.groups_rounded,
-                      title: 'Manage Staff',
-                      subtitle: 'Manage society staff',
-                      onTap: controller.goToAddStaff,
-                    ),
-                    const SizedBox(height: 12),
-                    _ActionRow(
-                      icon: Icons.campaign_rounded,
-                      title: 'Post Update',
-                      subtitle: 'Notify all residents',
-                      filled: true,
-                      onTap: showSendUpdateSheet,
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    // Occupancy overview
-                    Text(
-                      'OCCUPANCY OVERVIEW',
-                      style: AppTextStyles.overline.copyWith(color: AppColors.primaryDark),
-                    ),
-                    const SizedBox(height: 12),
-                    Obx(() {
-                      final list = controller.buildingOccupancy;
-                      if (list.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-                            border: Border.all(color: AppColors.borderLight),
-                          ),
-                          child: Text(
-                            'No buildings yet',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: [
-                          for (var i = 0; i < list.length; i++) ...[
-                            if (i > 0) const SizedBox(height: 12),
-                            _OccupancyCard(item: list[i]),
-                          ],
-                        ],
-                      );
-                    }),
-
-                    const SizedBox(height: 24),
-
-                    // Recent activity
-                    Text(
-                      'RECENT ACTIVITY',
-                      style: AppTextStyles.overline.copyWith(color: AppColors.primaryDark),
-                    ),
-                    const SizedBox(height: 12),
-                    Obx(() {
-                      final items = controller.recentActivity;
-                      if (items.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-                            border: Border.all(color: AppColors.borderLight),
-                          ),
-                          child: Text(
-                            'No recent activity yet',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        );
-                      }
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-                          border: Border.all(color: AppColors.borderLight),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x14000000),
-                              blurRadius: 10,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            for (var i = 0; i < items.length; i++) ...[
-                              if (i > 0)
-                                const Divider(height: 1, color: AppColors.borderLight),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      items[i].icon,
-                                      size: 20,
-                                      color: items[i].iconColor,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            items[i].title,
-                                            style: AppTextStyles.labelLarge,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            items[i].timeLabel,
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textMuted,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    }),
-
-                    const SizedBox(height: 24),
-
-                    // Complaints last 7 days
-                    Text(
-                      'COMPLAINTS, LAST 7 DAYS',
-                      style: AppTextStyles.overline.copyWith(color: AppColors.primaryDark),
-                    ),
-                    const SizedBox(height: 12),
-                    Obx(
-                      () => _ComplaintsChart(
-                        counts: controller.weeklyComplaintCounts.toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-class _JoinCodeExpandButton extends StatefulWidget {
-  final VoidCallback onCopy;
-  const _JoinCodeExpandButton({required this.onCopy});
-
-  @override
-  State<_JoinCodeExpandButton> createState() => _JoinCodeExpandButtonState();
-}
-
-class _JoinCodeExpandButtonState extends State<_JoinCodeExpandButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _t;
-  bool _expanded = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 550),
-    );
-    _t = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
-
-    // Start expanded, then collapse to key after a short delay
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 2200));
-      if (!mounted) return;
-      setState(() => _expanded = false);
-      await _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTap() {
-    if (_expanded) {
-      widget.onCopy();
-      return;
-    }
-    // Expand briefly, then copy
-    setState(() => _expanded = true);
-    _controller.reverse().then((_) async {
-      await Future.delayed(const Duration(milliseconds: 1200));
-      if (!mounted) return;
-      setState(() => _expanded = false);
-      _controller.forward();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final code = Get.find<DashboardController>().joinCode;
-
-    return AnimatedBuilder(
-      animation: _t,
-      builder: (context, _) {
-        // 0 = expanded, 1 = collapsed key
-        final t = _t.value;
-        final width = 40 + (180 * (1 - t)); // ~220 → 40
-        final radius = 20 + (12 * (1 - t));
-
-        return GestureDetector(
-          onTap: _onTap,
-          child: Container(
-            width: width,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primaryDark,
-              borderRadius: BorderRadius.circular(radius),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryDark.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: t < 0.5
-                ? Opacity(
-                    opacity: (1 - t * 2).clamp(0.0, 1.0),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  code.isEmpty ? '————' : code,
-                                  style: AppTextStyles.labelLarge.copyWith(
-                                    color: AppColors.accentGreen,
-                                    fontFamily: 'monospace',
-                                    letterSpacing: 1.5,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.copy_rounded, size: 16, color: AppColors.accentGreen),
-                        ],
-                      ),
-                    ),
-                  )
-                : Opacity(
-                    opacity: ((t - 0.5) * 2).clamp(0.0, 1.0),
-                    child: const Icon(Icons.key_rounded, size: 20, color: AppColors.accentGreen),
-                  ),
-          ),
-        );
-      },
-    );
-  }
-}
-class _OccupancyCard extends StatelessWidget {
-  final BuildingOccupancy item;
-  const _OccupancyCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = item.percent;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item.buildingName,
-            style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Text(
-                '${item.occupiedFlats}/${item.totalFlats} flats',
-                style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
-              ),
-              const Spacer(),
-              Text(
-                '${(pct * 100).round()}%',
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.accentGreenDark),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 10,
-              backgroundColor: AppColors.surfaceMuted,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGreen),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatPill extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final bool filled;
-  final bool danger;
-  final VoidCallback? onTap;
-
-  const _StatPill({
-    required this.icon,
-    required this.value,
-    required this.label,
-    this.filled = false,
-    this.danger = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color bg;
-    final Color fg;
-    final Color iconColor;
-    final Color labelColor;
-
-    if (filled) {
-      bg = AppColors.accentGreen;
-      fg = Colors.white;
-      iconColor = Colors.white;
-      labelColor = Colors.white.withValues(alpha: 0.85);
-    } else if (danger) {
-      bg = AppColors.dangerBg;
-      fg = AppColors.danger;
-      iconColor = AppColors.danger;
-      labelColor = AppColors.danger.withValues(alpha: 0.85);
-    } else {
-      bg = AppColors.surface;
-      fg = AppColors.textPrimary;
-      iconColor = AppColors.textMuted;
-      labelColor = AppColors.textMuted;
-    }
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-          border: filled
-              ? null
-              : Border.all(
-                  color: danger ? Colors.white : AppColors.borderLight,
-                ),
-          boxShadow: filled
-              ? [
-                  BoxShadow(
-                    color: AppColors.accentGreen.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: iconColor),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: AppTextStyles.h4.copyWith(color: fg, fontSize: 18),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(color: labelColor, fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool filled;
-  final VoidCallback onTap;
-
-  const _ActionRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.filled = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = filled ? AppColors.accentGreen : AppColors.surface;
-    final titleColor = filled ? Colors.white : AppColors.textPrimary;
-    final subtitleColor =
-        filled ? Colors.white.withValues(alpha: 0.8) : AppColors.textMuted;
-    final iconBg =
-        filled ? Colors.white.withValues(alpha: 0.2) : AppColors.surfaceMuted;
-    final iconColor = filled ? Colors.white : AppColors.textSecondary;
-    final chevronColor =
-        filled ? Colors.white.withValues(alpha: 0.8) : AppColors.textMuted;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-          border: filled ? null : Border.all(color: AppColors.borderLight),
-          boxShadow: filled
-              ? [
-                  BoxShadow(
-                    color: AppColors.accentGreen.withValues(alpha: 0.25),
-                    blurRadius: 14,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: Icon(icon, size: 19, color: iconColor),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.labelLarge.copyWith(color: titleColor),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.bodySmall.copyWith(color: subtitleColor),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, size: 20, color: chevronColor),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ComplaintsChart extends StatelessWidget {
-  final List<int> counts;
-  const _ComplaintsChart({required this.counts});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 160,
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusXl),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: CustomPaint(
-              painter: _LineChartPainter(counts: counts),
-              size: Size.infinite,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Mon', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-              Text('Sun', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LineChartPainter extends CustomPainter {
-  final List<int> counts;
-  _LineChartPainter({required this.counts});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (counts.isEmpty) return;
-
-    final maxVal = counts.reduce((a, b) => a > b ? a : b).clamp(1, 999);
-    final paint = Paint()
-      ..color = const Color(0xFFEA580C)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    final stepX = size.width / (counts.length - 1).clamp(1, 999);
-
-    for (var i = 0; i < counts.length; i++) {
-      final x = i * stepX;
-      final y = size.height -
-          (counts[i] / maxVal) * size.height * 0.85 -
-          size.height * 0.08;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(path, paint);
-
-    final dotPaint = Paint()..color = const Color(0xFFEA580C);
-    for (var i = 0; i < counts.length; i++) {
-      final x = i * stepX;
-      final y = size.height -
-          (counts[i] / maxVal) * size.height * 0.85 -
-          size.height * 0.08;
-      canvas.drawCircle(Offset(x, y), 3.5, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _LineChartPainter old) => old.counts != counts;
-}
+//                         // Cancel
+//                         TextButton(
+//                           onPressed: Get.back,
+//                           child: Text(
+//                             'Cancel',
+//                             style: AppTextStyles.labelLarge.copyWith(
+//                               color: AppColors.textSecondary,
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//       isScrollControlled: true,
+//       enterBottomSheetDuration: const Duration(milliseconds: 400),
+//     );
+//   }

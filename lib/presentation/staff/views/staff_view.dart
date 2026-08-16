@@ -22,103 +22,459 @@ class StaffView extends GetView<StaffController> {
   const StaffView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          AppStrings.managementStaff,
-          style: AppTextStyles.h4.copyWith(color: AppColors.textOnDark),
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textOnDark),
-        actions: [
-          IconButton(
-            onPressed: () {
-              controller.resetForm();
-              _showStaffFormSheet(context);
-            },
-            icon: const Icon(Icons.add, color: AppColors.textOnDark),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: AppColors.background,
+    // no appBar — header is in the body
+    body: Column(
+      children: [
+        // ── Header (same style as Updates) ────────────────────────────
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          decoration: const BoxDecoration(
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(AppDimens.headerRadius),
+              bottomRight: Radius.circular(AppDimens.headerRadius),
+            ),
           ),
-        ],
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const AppSkeletonList(itemBuilder: StaffTileSkeleton.new);
-        }
-
-        return Stack(
-          children: [
-            // Background character
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    '合',
-                    style: AppTextStyles.h1.copyWith(
-                      fontSize: 260,
-                      color: AppColors.primaryDark.withValues(alpha: 0.04),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              children: [
+                // Back
+                GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textOnDark.withValues(alpha: 0.12),
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.textOnDark,
+                      size: 20,
                     ),
                   ),
                 ),
-              ),
-            ),
+                const SizedBox(width: 12),
 
-            Column(
-              children: [
+                // Title
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                    child: AppResponsiveContainer(
+                  child: Text(
+                    AppStrings.managementStaff,
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.textOnDark,
+                    ),
+                  ),
+                ),
+
+                // Add staff
+                GestureDetector(
+                  onTap: () {
+                    controller.resetForm();
+                    _showStaffFormSheet(context);
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textOnDark.withValues(alpha: 0.12),
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: AppColors.textOnDark,
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Logo
+                SizedBox(
+                  width: 46,
+                  height: 46,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen,
+                        borderRadius:
+                            BorderRadius.circular(AppDimens.radiusSm),
+                      ),
+                      child: const Icon(
+                        Icons.villa_rounded,
+                        size: 22,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // ── Body ──────────────────────────────────────────────────────
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const AppSkeletonList(
+                itemBuilder: StaffTileSkeleton.new,
+              );
+            }
+
+            return Stack(
+              children: [
+                // Background character
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '合',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 260,
+                          color:
+                              AppColors.primaryDark.withValues(alpha: 0.04),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        child: AppResponsiveContainer(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (controller.staff.isEmpty)
+                                const _EmptyStaffState()
+                              else
+                                ...controller.staff.map(
+                                  (s) => Padding(
+                                    padding:
+                                        const EdgeInsets.only(bottom: 12),
+                                    child: _StaffTile(
+                                      staff: s,
+                                      onEdit: () {
+                                        controller.startEditing(s);
+                                        _showStaffFormSheet(context);
+                                      },
+                                      onDelete: () =>
+                                          _confirmDelete(context, s),
+                                      justSaved:
+                                          controller.justSavedStaffId
+                                                  .value ==
+                                              s.id,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  controller.resetForm();
+                                  _showStaffFormSheet(context);
+                                },
+                                icon: const Icon(
+                                  Icons.add,
+                                  size: 20,
+                                  color: AppColors.primaryDark,
+                                ),
+                                label: Text(
+                                  AppStrings.addStaff,
+                                  style: AppTextStyles.labelLarge,
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize:
+                                      const Size.fromHeight(56),
+                                  side: BorderSide(
+                                    color: AppColors.primaryDark
+                                        .withValues(alpha: 0.3),
+                                    width: 1.4,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimens.radius2xl,
+                                    ),
+                                  ),
+                                  backgroundColor: AppColors.surface,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: const BoxDecoration(
+                          color: AppColors.surface,
+                          border: Border(
+                            top: BorderSide(color: AppColors.borderLight),
+                          ),
+                        ),
+                        child: AppPrimaryButton(
+                          label: AppStrings.saveAndGoToDashboard,
+                          icon: Icons.check,
+                          onPressed: controller.goToDashboard,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
+        ),
+      ],
+    ),
+  );
+}
+  void _showStaffFormSheet(BuildContext context) {
+  Get.bottomSheet(
+    Padding(
+      // Lift sheet above the keyboard
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            // Scroll if content is taller than available space
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Dark header ──
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryDark,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle bar
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.textOnDark.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: AppColors.accentGreen
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.badge_rounded,
+                              color: AppColors.accentGreen,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  controller.isEditing
+                                      ? 'Edit Staff Member'
+                                      : AppStrings.addStaffMember,
+                                  style: AppTextStyles.h4.copyWith(
+                                    color: AppColors.textOnDark,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Add staff details for your society',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textOnDarkMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Form body ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Obx(
+                    () => AppShakeOnTrigger(
+                      trigger: controller.staffShakeTrigger.value,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (controller.staff.isEmpty)
-                            const _EmptyStaffState()
-                          else
-                            ...controller.staff.map(
-                              (s) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _StaffTile(
-                                  staff: s,
-                                  onEdit: () {
-                                    controller.startEditing(s);
-                                    _showStaffFormSheet(context);
-                                  },
-                                  onDelete: () => _confirmDelete(context, s),
-                                  justSaved:
-                                      controller.justSavedStaffId.value == s.id,
+                          // Full Name
+                          AppTextField(
+                            label: AppStrings.fullName,
+                            hint: AppStrings.fullNameHint,
+                            controller: controller.nameCtrl,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Phone Number
+                          AppTextField(
+                            label: AppStrings.phoneNumber,
+                            hint: AppStrings.phoneHint,
+                            controller: controller.phoneCtrl,
+                            keyboardType: TextInputType.phone,
+                          ),
+                          Obx(() {
+                            final error = controller.phoneError.value;
+                            if (error == null) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.error_outline,
+                                    size: 14,
+                                    color: AppColors.danger,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      error,
+                                      style: AppTextStyles.bodySmall
+                                          .copyWith(color: AppColors.danger),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 16),
+
+                          // Role
+                          Obx(
+                            () => AppDropdownField<StaffRole>(
+                              label: AppStrings.role,
+                              value: controller.selectedRole.value,
+                              items: StaffRole.values,
+                              labelBuilder: (r) => r.label,
+                              onChanged: controller.setRole,
+                            ),
+                          ),
+                          Obx(() {
+                            if (controller.selectedRole.value !=
+                                StaffRole.other) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: AppTextField(
+                                label: 'Role Name',
+                                hint: 'e.g. Gardener',
+                                controller: controller.customRoleCtrl,
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 16),
+
+                          // Info banner
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius:
+                                  BorderRadius.circular(AppDimens.radiusMd),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 18,
+                                  color: AppColors.roleAdminText,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Staff will appear as Pending until they join using the society code in the user app.',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.roleAdminText,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Submit button
+                          SizedBox(
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: controller.saveStaff,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryDark,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimens.radiusFull,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                controller.isEditing
+                                    ? 'Save Staff Member'
+                                    : AppStrings.saveStaffMember,
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  color: AppColors.accentGreen,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
+                          ),
                           const SizedBox(height: 8),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              controller.resetForm();
-                              _showStaffFormSheet(context);
-                            },
-                            icon: const Icon(
-                              Icons.add,
-                              size: 20,
-                              color: AppColors.primaryDark,
-                            ),
-                            label: Text(
-                              AppStrings.addStaff,
-                              style: AppTextStyles.labelLarge,
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(56),
-                              side: BorderSide(
-                                color: AppColors.primaryDark
-                                    .withValues(alpha: 0.3),
-                                width: 1.4,
+
+                          // Cancel
+                          TextButton(
+                            onPressed: Get.back,
+                            child: Text(
+                              'Cancel',
+                              style: AppTextStyles.labelLarge.copyWith(
+                                color: AppColors.textSecondary,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimens.radius2xl,
-                                ),
-                              ),
-                              backgroundColor: AppColors.surface,
                             ),
                           ),
                         ],
@@ -126,262 +482,16 @@ class StaffView extends GetView<StaffController> {
                     ),
                   ),
                 ),
-                SafeArea(
-                  top: false,
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      color: AppColors.surface,
-                      border: Border(
-                        top: BorderSide(color: AppColors.borderLight),
-                      ),
-                    ),
-                    child: AppPrimaryButton(
-                      label: AppStrings.saveAndGoToDashboard,
-                      icon: Icons.check,
-                      onPressed: controller.goToDashboard,
-                    ),
-                  ),
-                ),
               ],
             ),
-          ],
-        );
-      }),
-    );
-  }
-
-  void _showStaffFormSheet(BuildContext context) {
-    Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Dark header (same style as File a complaint) ──
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryDark,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                child: Column(
-                  children: [
-                    // Handle bar
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.textOnDark.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: AppColors.accentGreen.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.badge_rounded,
-                            color: AppColors.accentGreen,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                controller.isEditing
-                                    ? 'Edit Staff Member'
-                                    : AppStrings.addStaffMember,
-                                style: AppTextStyles.h4.copyWith(
-                                  color: AppColors.textOnDark,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Add staff details for your society',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.textOnDarkMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── Form body ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                child: Obx(
-                  () => AppShakeOnTrigger(
-                    trigger: controller.staffShakeTrigger.value,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Full Name
-                        AppTextField(
-                          label: AppStrings.fullName,
-                          hint: AppStrings.fullNameHint,
-                          controller: controller.nameCtrl,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Phone Number
-                        AppTextField(
-                          label: AppStrings.phoneNumber,
-                          hint: AppStrings.phoneHint,
-                          controller: controller.phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                        ),
-                        Obx(() {
-                          final error = controller.phoneError.value;
-                          if (error == null) return const SizedBox.shrink();
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 14,
-                                  color: AppColors.danger,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    error,
-                                    style: AppTextStyles.bodySmall
-                                        .copyWith(color: AppColors.danger),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 16),
-
-                        // Role
-                        Obx(
-                          () => AppDropdownField<StaffRole>(
-                            label: AppStrings.role,
-                            value: controller.selectedRole.value,
-                            items: StaffRole.values,
-                            labelBuilder: (r) => r.label,
-                            onChanged: controller.setRole,
-                          ),
-                        ),
-                        Obx(() {
-                          if (controller.selectedRole.value != StaffRole.other) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: AppTextField(
-                              label: 'Role Name',
-                              hint: 'e.g. Gardener',
-                              controller: controller.customRoleCtrl,
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 16),
-
-                        // Info banner
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius:
-                                BorderRadius.circular(AppDimens.radiusMd),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.info_outline_rounded,
-                                size: 18,
-                                color: AppColors.roleAdminText,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Staff will appear as Pending until they join using the society code in the user app.',
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.roleAdminText,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Submit button
-                        SizedBox(
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: controller.saveStaff,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryDark,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppDimens.radiusFull),
-                              ),
-                            ),
-                            child: Text(
-                              controller.isEditing
-                                  ? 'Save Staff Member'
-                                  : AppStrings.saveStaffMember,
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.accentGreen,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Cancel
-                        TextButton(
-                          onPressed: Get.back,
-                          child: Text(
-                            'Cancel',
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),
-      isScrollControlled: true,
-      enterBottomSheetDuration: const Duration(milliseconds: 400),
-    );
-  }
+    ),
+    isScrollControlled: true,
+    enterBottomSheetDuration: const Duration(milliseconds: 400),
+  );
+}
 
   void _confirmDelete(BuildContext context, StaffModel member) {
     showAppDeleteConfirmation(
@@ -529,7 +639,7 @@ class _StaffTileState extends State<_StaffTile>
   Widget build(BuildContext context) {
     final staff = widget.staff;
     final colors = _roleColors;
-    final isPending = staff.status == StaffStatus.active; // ← fixed
+    final isPending = staff.status == StaffStatus.pending; // ← fixed
 
     final cardContent = AnimatedBuilder(
       animation: _pulseController,
@@ -619,7 +729,7 @@ class _StaffTileState extends State<_StaffTile>
                   staff.initials,
                   style: AppTextStyles.labelLarge.copyWith(
                     color: colors.fg,
-                    fontSize: 25,
+                    fontSize: 15,
                   ),
                 ),
         ),

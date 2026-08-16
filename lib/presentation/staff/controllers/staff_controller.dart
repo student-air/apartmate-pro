@@ -85,10 +85,9 @@ class StaffController extends GetxController {
 
   Future<void> saveStaff() async {
   if (nameCtrl.text.trim().isEmpty ||
-      phoneCtrl.text.trim().isEmpty ||
-      cnicCtrl.text.trim().isEmpty) {
+      phoneCtrl.text.trim().isEmpty) {
     staffShakeTrigger.value++;
-    AppSnackbar.error('Missing info', 'Please fill in all required fields');
+    AppSnackbar.error('Missing info', 'Please fill in name and phone number');
     return;
   }
 
@@ -104,10 +103,7 @@ class StaffController extends GetxController {
     return;
   }
 
-  if (!Validators.isValidCnic(cnicCtrl.text)) {
-    cnicError.value = 'Use format 35202-1234567-8';
-    return;
-  }
+  // CNIC is optional — no required or format check
 
   String savedId;
 

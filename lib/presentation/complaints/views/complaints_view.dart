@@ -13,92 +13,180 @@ class ComplaintsView extends GetView<ComplaintsController> {
   const ComplaintsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 28,
-                height: 24,
-                fit: BoxFit.cover,
-              ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: AppColors.background,
+    // no appBar
+    body: Column(
+      children: [
+        // ── Header + tabs ─────────────────────────────────────────────
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          decoration: const BoxDecoration(
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(AppDimens.headerRadius),
+              bottomRight: Radius.circular(AppDimens.headerRadius),
             ),
-            const SizedBox(width: 4),
-            Text('Complaints', style: AppTextStyles.h4.copyWith(color: Colors.white)),
-          ],
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          Obx(() {
-            final hasItems = controller.selectedTab.value == 0
-                ? controller.complaints.isNotEmpty
-                : controller.resolved.isNotEmpty;
-            if (!hasItems) return const SizedBox.shrink();
-            return TextButton(
-              onPressed: controller.confirmClearAll,
-              child: Text(
-                'Clear All',
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.accentGreen),
-              ),
-            );
-          }),
-        ],
-        bottom: TabBar(
-          controller: controller.tabController,
-          indicatorColor: AppColors.accentGreen,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: AppTextStyles.labelLarge,
-          tabs: const [
-            Tab(text: 'All Complaints'),
-            Tab(text: 'Resolved'),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: AppResponsiveContainer(
-          child: Obx(() {
-            if (controller.isLoading.value &&
-                controller.complaints.isEmpty &&
-                controller.resolved.isEmpty) {
-              return const AppSkeletonList(itemBuilder: UpdateCardSkeleton.new);
-            }
-            return TabBarView(
-              controller: controller.tabController,
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
               children: [
-                _ComplaintsList(
-                  items: controller.complaints,
-                  emptyTitle: 'No complaints yet',
-                  emptySubtitle: 'All complaints will show up here',
-                  onDelete: controller.deleteComplaint,
-                  onMarkSeen: (id) => controller.setStatus(id, ComplaintStatus.pending),
-                  onMarkReviewed: (id) =>
-                      controller.setStatus(id, ComplaintStatus.underReview),
-                  onMarkResolved: controller.markResolved,
-                  showActions: true,
+                // Title row
+                Row(
+                  children: [
+                    // Back
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.textOnDark.withValues(alpha: 0.12),
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusMd),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: AppColors.textOnDark,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Title
+                    Expanded(
+                      child: Text(
+                        'Complaints',
+                        style: AppTextStyles.h3.copyWith(
+                          color: AppColors.textOnDark,
+                        ),
+                      ),
+                    ),
+
+                    // Clear All
+                    Obx(() {
+                      final hasItems = controller.selectedTab.value == 0
+                          ? controller.complaints.isNotEmpty
+                          : controller.resolved.isNotEmpty;
+                      if (!hasItems) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: TextButton(
+                          onPressed: controller.confirmClearAll,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.accentGreen,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Clear All',
+                            style: AppTextStyles.labelLarge.copyWith(
+                              color: AppColors.accentGreen,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+
+                    // Logo
+                    SizedBox(
+                      width: 46,
+                      height: 46,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGreen,
+                            borderRadius: BorderRadius.circular(
+                              AppDimens.radiusSm,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.villa_rounded,
+                            size: 22,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                _ComplaintsList(
-                  items: controller.resolved,
-                  emptyTitle: 'No resolved complaints',
-                  emptySubtitle: 'Resolved complaints will appear here',
-                  onDelete: controller.deleteResolved,
-                  onMarkSeen: null,
-                  onMarkReviewed: null,
-                  onMarkResolved: null,
-                  showActions: false,
+                const SizedBox(height: 8),
+
+                // Tabs
+                TabBar(
+                  controller: controller.tabController,
+                  indicatorColor: AppColors.accentGreen,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white70,
+                  labelStyle: AppTextStyles.labelLarge,
+                  tabs: const [
+                    Tab(text: 'All Complaints'),
+                    Tab(text: 'Resolved'),
+                  ],
                 ),
               ],
-            );
-          }),
+            ),
+          ),
         ),
-      ),
-    );
-  }
+
+        // ── Body ──────────────────────────────────────────────────────
+        Expanded(
+          child: AppResponsiveContainer(
+            child: Obx(() {
+              if (controller.isLoading.value &&
+                  controller.complaints.isEmpty &&
+                  controller.resolved.isEmpty) {
+                return const AppSkeletonList(
+                  itemBuilder: UpdateCardSkeleton.new,
+                );
+              }
+              return TabBarView(
+                controller: controller.tabController,
+                children: [
+                  _ComplaintsList(
+                    items: controller.complaints,
+                    emptyTitle: 'No complaints yet',
+                    emptySubtitle: 'All complaints will show up here',
+                    onDelete: controller.deleteComplaint,
+                    onMarkSeen: (id) =>
+                        controller.setStatus(id, ComplaintStatus.pending),
+                    onMarkReviewed: (id) => controller.setStatus(
+                      id,
+                      ComplaintStatus.underReview,
+                    ),
+                    onMarkResolved: controller.markResolved,
+                    showActions: true,
+                  ),
+                  _ComplaintsList(
+                    items: controller.resolved,
+                    emptyTitle: 'No resolved complaints',
+                    emptySubtitle: 'Resolved complaints will appear here',
+                    onDelete: controller.deleteResolved,
+                    onMarkSeen: null,
+                    onMarkReviewed: null,
+                    onMarkResolved: null,
+                    showActions: false,
+                  ),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _ComplaintsList extends StatelessWidget {

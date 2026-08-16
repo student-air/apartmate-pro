@@ -17,92 +17,79 @@ class UpdatesView extends GetView<UpdatesController> {
   const UpdatesView({super.key});
 
   Future<void> _confirmClearAll(BuildContext context) async {
-  Get.dialog(
-    Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      backgroundColor: AppColors.surface,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Clear all updates?',
-              style: AppTextStyles.h4,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'This will permanently remove every update from this list.',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Get.back();
-                  controller.clearAll();
-                },
-                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.white),
-                label: Text(
-                  'Clear All',
-                  style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Clear all updates?',
+                style: AppTextStyles.h4,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This will permanently remove every update from this list.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimens.radiusFull),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Get.back();
+                    controller.clearAll();
+                  },
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'Clear All',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusFull),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text(
-                'Cancel',
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.textPrimary),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Get.back(),
+                child: Text(
+                  'Cancel',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        titleSpacing: -10,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/logo.png', height: 32, fit: BoxFit.cover),
-            const SizedBox(width: 2),
-            Text('Updates', style: AppTextStyles.h3.copyWith(color: Colors.white)),
-          ],
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          Obx(() {
-            if (controller.updates.isEmpty) return const SizedBox.shrink();
-            return TextButton(
-              onPressed: () => _confirmClearAll(context),
-              child: const Text('Clear All', style: TextStyle(color: AppColors.accentGreen)),
-            );
-          }),
-        ],
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: AppAddFab(
         onPressed: showSendUpdateSheet,
@@ -110,48 +97,164 @@ class UpdatesView extends GetView<UpdatesController> {
       bottomNavigationBar: AppBottomNav(
         activeTab: AppNavTab.updates,
         onHome: () => Get.offNamed(AppRoutes.dashboard),
-        onUpdates: () {}, // already here
+        onUpdates: () {},
         onRequests: () => Get.offNamed(AppRoutes.requests),
         onProfile: () => Get.toNamed(AppRoutes.profile),
       ),
-      body: SafeArea(
-        child: Obx(() {
-          if (controller.isLoading.value && controller.updates.isEmpty) {
-            return const AppSkeletonList(itemBuilder: UpdateCardSkeleton.new);
-          }
-          if (controller.updates.isEmpty) {
-            return _EmptyState(onRefresh: controller.refresh);
-          }
-          return RefreshIndicator(
-            color: AppColors.primaryDark,
-            onRefresh: controller.refresh,
-            child: AppResponsiveContainer(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                itemCount: controller.updates.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final update = controller.updates[index];
-                  return Dismissible(
-                    key: ValueKey(update.id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: AppColors.danger,
-                        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-                      ),
-                      child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                    ),
-                    onDismissed: (_) => controller.deleteUpdate(update.id),
-                    child: _UpdateCard(update: update),
-                  );
-                },
+      body: Column(
+        children: [
+          // ── Header (same as other app) ──────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: const BoxDecoration(
+              color: AppColors.primaryDark,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(AppDimens.headerRadius),
+                bottomRight: Radius.circular(AppDimens.headerRadius),
               ),
             ),
-          );
-        }),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  // Back
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color:
+                            AppColors.textOnDark.withValues(alpha: 0.12),
+                        borderRadius:
+                            BorderRadius.circular(AppDimens.radiusMd),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: AppColors.textOnDark,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Title
+                  Expanded(
+                    child: Text(
+                      'Updates',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textOnDark,
+                      ),
+                    ),
+                  ),
+
+                  // Clear All (beside logo)
+                  Obx(() {
+                    if (controller.updates.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextButton(
+                        onPressed: () => _confirmClearAll(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.accentGreen,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Clear All',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.accentGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+
+                  // Logo
+                  SizedBox(
+                    width: 46,
+                    height: 46,
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.accentGreen,
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusSm),
+                        ),
+                        child: const Icon(
+                          Icons.villa_rounded,
+                          size: 22,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Body ────────────────────────────────────────────────────
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value &&
+                  controller.updates.isEmpty) {
+                return const AppSkeletonList(
+                  itemBuilder: UpdateCardSkeleton.new,
+                );
+              }
+              if (controller.updates.isEmpty) {
+                return _EmptyState(onRefresh: controller.refresh);
+              }
+              return RefreshIndicator(
+                color: AppColors.primaryDark,
+                onRefresh: controller.refresh,
+                child: AppResponsiveContainer(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                    itemCount: controller.updates.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final update = controller.updates[index];
+                      return Dismissible(
+                        key: ValueKey(update.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            borderRadius: BorderRadius.circular(
+                              AppDimens.radiusLg,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onDismissed: (_) =>
+                            controller.deleteUpdate(update.id),
+                        child: _UpdateCard(update: update),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -164,13 +267,33 @@ class _UpdateCard extends StatelessWidget {
   ({Color bg, Color text, Color border, String label}) get _typeStyle {
     switch (update.type) {
       case UpdateType.security:
-        return (bg: AppColors.dangerBg, text: AppColors.danger, border: AppColors.dangerBorder, label: 'Security Alert');
+        return (
+          bg: AppColors.dangerBg,
+          text: AppColors.danger,
+          border: AppColors.dangerBorder,
+          label: 'Security Alert',
+        );
       case UpdateType.announcement:
-        return (bg: AppColors.roleAdminBg, text: AppColors.roleAdminText, border: AppColors.roleAdminBorder, label: 'Announcement');
+        return (
+          bg: AppColors.roleAdminBg,
+          text: AppColors.roleAdminText,
+          border: AppColors.roleAdminBorder,
+          label: 'Announcement',
+        );
       case UpdateType.general:
-        return (bg: AppColors.warningBg, text: AppColors.warning, border: AppColors.warningBorder, label: 'General Update');
+        return (
+          bg: AppColors.warningBg,
+          text: AppColors.warning,
+          border: AppColors.warningBorder,
+          label: 'General Update',
+        );
       case UpdateType.other:
-        return (bg: const Color.fromARGB(255, 172, 232, 194), text: AppColors.accentGreenDark, border: AppColors.accentGreenDark, label: 'Other');
+        return (
+          bg: const Color.fromARGB(255, 172, 232, 194),
+          text: AppColors.accentGreenDark,
+          border: AppColors.accentGreenDark,
+          label: 'Other',
+        );
     }
   }
 
@@ -182,7 +305,13 @@ class _UpdateCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 3))],
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +319,8 @@ class _UpdateCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: style.bg,
                   borderRadius: BorderRadius.circular(AppDimens.radiusFull),
@@ -198,30 +328,41 @@ class _UpdateCard extends StatelessWidget {
                 ),
                 child: Text(
                   style.label,
-                  style: AppTextStyles.labelSmall.copyWith(color: style.text),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: style.text,
+                  ),
                 ),
               ),
               const Spacer(),
               Text(
                 _formatDate(update.postedAt),
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textMuted,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
             update.category ?? 'Update',
-            style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w800, color: AppColors.primaryDark),
+            style: AppTextStyles.labelLarge.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryDark,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             update.description,
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             update.destinationLabel,
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -230,7 +371,9 @@ class _UpdateCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+    final isToday = date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
     if (isToday) return DateFormat('h:mm a').format(date);
     return DateFormat('MMM d').format(date);
   }
@@ -267,7 +410,9 @@ class _EmptyState extends StatelessWidget {
                   Text(
                     'Updates and announcements\nwill show up here.',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),

@@ -19,76 +19,150 @@ class RequestsView extends GetView<RequestsController> {
   const RequestsView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        titleSpacing: -10,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/logo.png', height: 32, fit: BoxFit.cover),
-            const SizedBox(width: 2),
-            Text('Requests', style: AppTextStyles.h3.copyWith(color: Colors.white)),
-          ],
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        bottom: TabBar(
-          controller: controller.tabController,
-          indicatorColor: AppColors.accentGreen,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: AppTextStyles.labelLarge,
-          tabs: const [
-            Tab(text: 'Owners'),
-            Tab(text: 'Staff'),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: AppAddFab(
-        onPressed: showSendUpdateSheet,
-      ),
-      bottomNavigationBar: AppBottomNav(
-        activeTab: AppNavTab.requests,
-        onHome: () => Get.offNamed(AppRoutes.dashboard),
-        onUpdates: () => Get.offNamed(AppRoutes.updates),
-        onRequests: () {},
-        onProfile: () => Get.toNamed(AppRoutes.profile),
-      ),
-      body: SafeArea(
-        child: AppResponsiveContainer(
-          child: Obx(() {
-            if (controller.isLoading.value &&
-                controller.ownerRequests.isEmpty &&
-                controller.staffRequests.isEmpty) {
-              return const AppSkeletonList(itemBuilder: UpdateCardSkeleton.new);
-            }
-            return TabBarView(
-              controller: controller.tabController,
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: AppColors.background,
+    // no appBar
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    floatingActionButton: AppAddFab(
+      onPressed: showSendUpdateSheet,
+    ),
+    bottomNavigationBar: AppBottomNav(
+      activeTab: AppNavTab.requests,
+      onHome: () => Get.offNamed(AppRoutes.dashboard),
+      onUpdates: () => Get.offNamed(AppRoutes.updates),
+      onRequests: () {},
+      onProfile: () => Get.toNamed(AppRoutes.profile),
+    ),
+    body: Column(
+      children: [
+        // ── Header + tabs ─────────────────────────────────────────────
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          decoration: const BoxDecoration(
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(AppDimens.headerRadius),
+              bottomRight: Radius.circular(AppDimens.headerRadius),
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Column(
               children: [
-                _RequestsList(
-                  items: controller.ownerRequests,
-                  emptyTitle: 'No owner requests',
-                  emptySubtitle: 'Owner requests will show up here',
-                  onRefresh: controller.refresh,
+                // Title row
+                Row(
+                  children: [
+                    // Back
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.textOnDark.withValues(alpha: 0.12),
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusMd),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: AppColors.textOnDark,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+
+                    // Title
+                    Expanded(
+                      child: Text(
+                        'Requests',
+                        style: AppTextStyles.h3.copyWith(
+                          color: AppColors.textOnDark,
+                        ),
+                      ),
+                    ),
+
+                    // Logo
+                    SizedBox(
+                      width: 46,
+                      height: 46,
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGreen,
+                            borderRadius: BorderRadius.circular(
+                              AppDimens.radiusSm,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.villa_rounded,
+                            size: 22,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                _RequestsList(
-                  items: controller.staffRequests,
-                  emptyTitle: 'No staff requests',
-                  emptySubtitle: 'Staff requests will show up here',
-                  onRefresh: controller.refresh,
+                const SizedBox(height: 8),
+
+                // Tabs
+                TabBar(
+                  controller: controller.tabController,
+                  indicatorColor: AppColors.accentGreen,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white70,
+                  labelStyle: AppTextStyles.labelLarge,
+                  tabs: const [
+                    Tab(text: 'Owners'),
+                    Tab(text: 'Staff'),
+                  ],
                 ),
               ],
-            );
-          }),
+            ),
+          ),
         ),
-      ),
-    );
-  }
+
+        // ── Body ──────────────────────────────────────────────────────
+        Expanded(
+          child: AppResponsiveContainer(
+            child: Obx(() {
+              if (controller.isLoading.value &&
+                  controller.ownerRequests.isEmpty &&
+                  controller.staffRequests.isEmpty) {
+                return const AppSkeletonList(
+                  itemBuilder: UpdateCardSkeleton.new,
+                );
+              }
+              return TabBarView(
+                controller: controller.tabController,
+                children: [
+                  _RequestsList(
+                    items: controller.ownerRequests,
+                    emptyTitle: 'No owner requests',
+                    emptySubtitle: 'Owner requests will show up here',
+                    onRefresh: controller.refresh,
+                  ),
+                  _RequestsList(
+                    items: controller.staffRequests,
+                    emptyTitle: 'No staff requests',
+                    emptySubtitle: 'Staff requests will show up here',
+                    onRefresh: controller.refresh,
+                  ),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _RequestsList extends StatelessWidget {

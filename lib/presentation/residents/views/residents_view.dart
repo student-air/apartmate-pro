@@ -213,7 +213,7 @@ class _ResidentsAppBar extends StatefulWidget implements PreferredSizeWidget {
   State<_ResidentsAppBar> createState() => _ResidentsAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(88);
 }
 
 class _ResidentsAppBarState extends State<_ResidentsAppBar> {
