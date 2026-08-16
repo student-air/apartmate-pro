@@ -26,37 +26,6 @@ class ResidentsView extends GetView<ResidentsController> {
       floatingActionButton: AppAddFab(
         onPressed: showSendUpdateSheet,
       ),
-      // appBar: AppBar(
-      //   backgroundColor: AppColors.primaryDark,
-      //   titleSpacing: 0,
-      //   iconTheme: const IconThemeData(color: Colors.white),
-      //   leading: Builder(
-      //     builder: (context) => IconButton(
-      //       onPressed: () => Scaffold.of(context).openDrawer(),
-      //       icon: const Icon(Icons.menu_rounded),
-      //     ),
-      //   ),
-      //   title: Row(
-      //     mainAxisSize: MainAxisSize.min,
-      //     children: [
-      //       Image.asset('assets/images/logo.png', height: 24),
-      //       const SizedBox(width: 8),
-      //       Text('Residents', style: AppTextStyles.h4.copyWith(color: Colors.white)),
-      //     ],
-      //   ),
-      //   actions: [
-      //     Obx(() => controller.hasActiveFilters
-      //         ? Padding(
-      //             padding: const EdgeInsets.only(right: 8),
-      //             child: TextButton(
-      //               onPressed: controller.clearFilters,
-      //               child: const Text('Clear', style: TextStyle(color: Colors.white)),
-      //             ),
-      //           )
-      //         : const SizedBox.shrink()),
-      //   ],
-      // ),
-      appBar: const _ResidentsAppBar(),
       bottomNavigationBar: AppBottomNav(
         activeTab: AppNavTab.home,
         onHome: () => Get.offAllNamed(AppRoutes.dashboard),
@@ -64,57 +33,263 @@ class ResidentsView extends GetView<ResidentsController> {
         onRequests: () => Get.toNamed(AppRoutes.requests),
         onProfile: () => Get.toNamed(AppRoutes.profile),
       ),
-      body: Obx(() {
-  if (controller.isLoading.value) {
-    return const AppSkeletonList(itemBuilder: StaffTileSkeleton.new);
-  }
-  final grouped = controller.groupedByBuilding;
-  if (grouped.isEmpty) {
-    return RefreshIndicator(
-      color: AppColors.primaryDark,
-      onRefresh: controller.refresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 200),
-          _EmptyResidentsState(),
+      body: Column(
+        children: [
+          // ── Header ──────────────────────────────────────────────
+          const _ResidentsHeader(),
+
+          // ── Body ────────────────────────────────────────────────
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const AppSkeletonList(
+                  itemBuilder: StaffTileSkeleton.new,
+                );
+              }
+
+              final grouped = controller.groupedByBuilding;
+
+              if (grouped.isEmpty) {
+                return RefreshIndicator(
+                  color: AppColors.primaryDark,
+                  onRefresh: controller.refresh,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 200),
+                      _EmptyResidentsState(),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                color: AppColors.primaryDark,
+                onRefresh: controller.refresh,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                  child: AppResponsiveContainer(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: grouped.entries.expand((entry) {
+                        return [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10, top: 4),
+                            child: Text(entry.key, style: AppTextStyles.h4),
+                          ),
+                          ...entry.value.map(
+                            (r) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ResidentTile(resident: r),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ];
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
         ],
       ),
     );
   }
+}
 
-  return RefreshIndicator(
-    color: AppColors.primaryDark,
-    onRefresh: controller.refresh,
-    child: SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-      child: AppResponsiveContainer(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: grouped.entries.expand((entry) {
-            return [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10, top: 4),
-                child: Text(entry.key, style: AppTextStyles.h4),
-              ),
-              ...entry.value.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _ResidentTile(resident: r),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ];
-          }).toList(),
+// ─────────────────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ResidentsHeader extends StatefulWidget {
+  const _ResidentsHeader();
+
+  @override
+  State<_ResidentsHeader> createState() => _ResidentsHeaderState();
+}
+
+class _ResidentsHeaderState extends State<_ResidentsHeader> {
+  bool _isSearching = false;
+  final _searchCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<ResidentsController>();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: const BoxDecoration(
+        color: AppColors.primaryDark,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(AppDimens.headerRadius),
+          bottomRight: Radius.circular(AppDimens.headerRadius),
         ),
       ),
-    ),
-  );
-}),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            // Menu (opens drawer)
+            Builder(
+              builder: (context) => GestureDetector(
+                onTap: () => Scaffold.of(context).openDrawer(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.textOnDark.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                  ),
+                  child: const Icon(
+                    Icons.menu_rounded,
+                    color: AppColors.textOnDark,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Title or Search field
+            Expanded(
+              child: _isSearching
+                  ? TextField(
+                      controller: _searchCtrl,
+                      autofocus: true,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.primaryDark,
+                      ),
+                      cursorColor: AppColors.primaryDark,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name',
+                        hintStyle: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.primaryDark.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusFull),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusFull),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppDimens.radiusFull),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: controller.setSearchQuery,
+                    )
+                  : Text(
+                      'Residents',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textOnDark,
+                      ),
+                    ),
+            ),
+
+            // Search toggle
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (_isSearching) {
+                    _searchCtrl.clear();
+                    controller.setSearchQuery('');
+                  }
+                  _isSearching = !_isSearching;
+                });
+              },
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.textOnDark.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                ),
+                child: Icon(
+                  _isSearching ? Icons.close_rounded : Icons.search_rounded,
+                  color: AppColors.accentGreen,
+                  size: 20,
+                ),
+              ),
+            ),
+
+            // Clear filters (only when active & not searching)
+            Obx(() {
+              if (!controller.hasActiveFilters || _isSearching) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: TextButton(
+                  onPressed: controller.clearFilters,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.accentGreen,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Clear',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: AppColors.accentGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            }),
+
+            // Logo
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 46,
+              height: 46,
+              child: Image.asset(
+                'assets/images/logo.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGreen,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                  ),
+                  child: const Icon(
+                    Icons.villa_rounded,
+                    size: 22,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAWER + FILTERS
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _FilterDrawer extends StatelessWidget {
   const _FilterDrawer();
@@ -136,13 +311,22 @@ class _FilterDrawer extends StatelessWidget {
               Text('Building', style: AppTextStyles.labelLarge),
               const SizedBox(height: 8),
               Obx(() {
-                final buildingNames = controller.buildings.map((b) => b.name).toSet().toList();
+                final buildingNames =
+                    controller.buildings.map((b) => b.name).toSet().toList();
                 return DropdownButtonFormField<String?>(
                   initialValue: controller.selectedBuildingName.value,
                   isExpanded: true,
                   items: [
-                    const DropdownMenuItem<String?>(value: null, child: Text('All Buildings')),
-                    ...buildingNames.map((name) => DropdownMenuItem<String?>(value: name, child: Text(name))),
+                    const DropdownMenuItem<String?>(
+                      value: null,
+                      child: Text('All Buildings'),
+                    ),
+                    ...buildingNames.map(
+                      (name) => DropdownMenuItem<String?>(
+                        value: name,
+                        child: Text(name),
+                      ),
+                    ),
                   ],
                   onChanged: controller.setBuildingFilter,
                 );
@@ -153,16 +337,24 @@ class _FilterDrawer extends StatelessWidget {
               const SizedBox(height: 8),
               Obx(() {
                 final floors = controller.availableFloorsForFilter;
-                final hasBuilding = controller.selectedBuildingName.value != null;
+                final hasBuilding =
+                    controller.selectedBuildingName.value != null;
                 return DropdownButtonFormField<int?>(
                   initialValue: controller.selectedFloor.value,
                   isExpanded: true,
                   items: [
                     DropdownMenuItem<int?>(
                       value: null,
-                      child: Text(hasBuilding ? 'All Floors' : 'Select a building first'),
+                      child: Text(
+                        hasBuilding ? 'All Floors' : 'Select a building first',
+                      ),
                     ),
-                    ...floors.map((f) => DropdownMenuItem<int?>(value: f, child: Text('Floor $f'))),
+                    ...floors.map(
+                      (f) => DropdownMenuItem<int?>(
+                        value: f,
+                        child: Text('Floor $f'),
+                      ),
+                    ),
                   ],
                   onChanged: !hasBuilding ? null : controller.setFloorFilter,
                 );
@@ -171,30 +363,44 @@ class _FilterDrawer extends StatelessWidget {
 
               Text('Rent Status', style: AppTextStyles.labelLarge),
               const SizedBox(height: 8),
-              Obx(() => _FilterChips(
-                    selected: controller.rentFilter.value,
-                    onSelected: controller.setRentFilter,
-                  )),
+              Obx(
+                () => _FilterChips(
+                  selected: controller.rentFilter.value,
+                  onSelected: controller.setRentFilter,
+                ),
+              ),
               const SizedBox(height: 20),
 
               Text('Maintenance Status', style: AppTextStyles.labelLarge),
               const SizedBox(height: 8),
-              Obx(() => _FilterChips(
-                    selected: controller.maintenanceFilter.value,
-                    onSelected: controller.setMaintenanceFilter,
-                  )),
+              Obx(
+                () => _FilterChips(
+                  selected: controller.maintenanceFilter.value,
+                  onSelected: controller.setMaintenanceFilter,
+                ),
+              ),
 
               const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: controller.clearFilters,
-                  icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.accentGreen),
-                  label: const Text('Reset Filters', style: TextStyle(color: AppColors.accentGreen)),
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    size: 18,
+                    color: AppColors.accentGreen,
+                  ),
+                  label: const Text(
+                    'Reset Filters',
+                    style: TextStyle(color: AppColors.accentGreen),
+                  ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     backgroundColor: AppColors.primaryDark,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusFull)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppDimens.radiusFull),
+                    ),
                   ),
                 ),
               ),
@@ -206,105 +412,14 @@ class _FilterDrawer extends StatelessWidget {
   }
 }
 
-class _ResidentsAppBar extends StatefulWidget implements PreferredSizeWidget {
-  const _ResidentsAppBar();
-
-  @override
-  State<_ResidentsAppBar> createState() => _ResidentsAppBarState();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(88);
-}
-
-class _ResidentsAppBarState extends State<_ResidentsAppBar> {
-  bool _isSearching = false;
-  final _searchCtrl = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<ResidentsController>();
-    return AppBar(
-      backgroundColor: AppColors.primaryDark,
-      titleSpacing: 0,
-      iconTheme: const IconThemeData(color: Colors.white),
-      leading: Builder(
-        builder: (context) => IconButton(
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          icon: const Icon(Icons.menu_rounded),
-        ),
-      ),
-      title: _isSearching
-          ? TextField(
-              controller: _searchCtrl,
-              autofocus: true,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
-              cursorColor: AppColors.primaryDark,
-              decoration: InputDecoration(
-                hintText: 'Search by name',
-                hintStyle: TextStyle(color: AppColors.primaryDark, fontSize: 16),
-                border: InputBorder.none,
-                filled: true,
-                fillColor: Colors.white,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              ),
-              onChanged: controller.setSearchQuery,
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset('assets/images/logo.png', height: 24),
-                const SizedBox(width: 8),
-                Text('Residents', style: AppTextStyles.h4.copyWith(color: Colors.white)),
-              ],
-            ),
-      actions: [
-        IconButton(
-          onPressed: () {
-            setState(() {
-              if (_isSearching) {
-                _searchCtrl.clear();
-                controller.setSearchQuery('');
-              }
-              _isSearching = !_isSearching;
-            });
-          },
-          icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded, color: AppColors.accentGreen),
-        ),
-        Obx(() => controller.hasActiveFilters && !_isSearching
-            ? Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: TextButton(
-                  onPressed: controller.clearFilters,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.accentGreen,
-                  ),
-                  child: const Text('Clear', style: TextStyle(color: Colors.white)),
-                ),
-              )
-            : const SizedBox.shrink()),
-      ],
-    );
-  }
-}
-
 class _FilterChips extends StatelessWidget {
   final PaymentFilter selected;
   final ValueChanged<PaymentFilter> onSelected;
-  const _FilterChips({required this.selected, required this.onSelected});
+
+  const _FilterChips({
+    required this.selected,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -322,12 +437,18 @@ class _FilterChips extends StatelessWidget {
           selected: isSelected,
           onSelected: (_) => onSelected(filter),
           selectedColor: AppColors.accentGreen,
-          labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textPrimary),
+          labelStyle: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+          ),
         );
       }).toList(),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY STATE
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _EmptyResidentsState extends StatelessWidget {
   const _EmptyResidentsState();
@@ -362,7 +483,13 @@ class _EmptyResidentsState extends StatelessWidget {
       ),
     );
   }
-}class _ResidentTile extends StatelessWidget {
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESIDENT TILE
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ResidentTile extends StatelessWidget {
   final ResidentModel resident;
   const _ResidentTile({required this.resident});
 
@@ -555,7 +682,8 @@ class _EmptyResidentsState extends StatelessWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryDark.withValues(alpha: 0.08),
+                              color: AppColors.primaryDark
+                                  .withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
@@ -566,7 +694,10 @@ class _EmptyResidentsState extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text('Send update', style: AppTextStyles.labelLarge),
+                          Text(
+                            'Send update',
+                            style: AppTextStyles.labelLarge,
+                          ),
                         ],
                       ),
                     ),
@@ -593,7 +724,10 @@ class _EmptyResidentsState extends StatelessWidget {
               children: [
                 _PaymentChip(label: 'Rent', paid: resident.rentPaid),
                 const SizedBox(width: 6),
-                _PaymentChip(label: 'Maint', paid: resident.maintenancePaid),
+                _PaymentChip(
+                  label: 'Maint',
+                  paid: resident.maintenancePaid,
+                ),
               ],
             ),
           ],
