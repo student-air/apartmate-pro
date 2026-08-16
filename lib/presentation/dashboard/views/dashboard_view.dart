@@ -714,7 +714,7 @@ class _PendingApprovalsCard extends StatelessWidget {
                   iconColor: const Color(0xFF7C3AED),
                   label: 'Tenancy Approvals',
                   count: controller.pendingTenantRequestsCount.value,
-                  onTap: controller.goToRequests,
+                  onTap: controller.goToResidents,
                 ),
                 const Divider(height: 1, color: AppColors.borderLight),
                 _PendingCategoryRow(
