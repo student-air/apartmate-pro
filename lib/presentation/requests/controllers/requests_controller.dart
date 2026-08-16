@@ -28,7 +28,7 @@ class RequestsController extends GetxController
   late final TabController tabController;
 
   final ownerRequests = <RequestModel>[].obs;
-  final tenantRequests = <RequestModel>[].obs;
+  final staffRequests = <RequestModel>[].obs;
   final isLoading = false.obs;
   final selectedTab = 0.obs;
   final expandedRequestId = Rxn<String>();
@@ -58,21 +58,23 @@ class RequestsController extends GetxController
   }
 
   Future<void> loadRequests() async {
-    isLoading.value = true;
-    try {
-      final result = await _requestRepository.getRequests();
-      final pending =
-          result.where((r) => r.status == RequestStatus.pending).toList();
-      ownerRequests.assignAll(
-        pending.where((r) => r.applicantType == RequestApplicantType.owner),
-      );
-      tenantRequests.assignAll(
-        pending.where((r) => r.applicantType == RequestApplicantType.tenant),
-      );
-    } finally {
-      isLoading.value = false;
-    }
+  isLoading.value = true;
+  try {
+    final result = await _requestRepository.getRequests();
+    final pending =
+        result.where((r) => r.status == RequestStatus.pending).toList();
+
+    ownerRequests.assignAll(
+      pending.where((r) => r.applicantType == RequestApplicantType.owner),
+    );
+
+    staffRequests.assignAll(
+      pending.where((r) => r.applicantType == RequestApplicantType.staff),
+    );
+  } finally {
+    isLoading.value = false;
   }
+}
 
   Future<void> refresh() => loadRequests();
 
@@ -261,7 +263,7 @@ Future<void> ignore(RequestModel request, {required String reason}) async {
 }
   void _removeFromLists(String id) {
     ownerRequests.removeWhere((r) => r.id == id);
-    tenantRequests.removeWhere((r) => r.id == id);
+    staffRequests.removeWhere((r) => r.id == id);
     if (expandedRequestId.value == id) expandedRequestId.value = null;
   }
 }

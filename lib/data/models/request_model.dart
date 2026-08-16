@@ -1,6 +1,6 @@
 enum RequestStatus { pending, accepted, rejected }
 
-enum RequestApplicantType { owner, tenant }
+enum RequestApplicantType { owner, tenant, staff }
 
 class RequestModel {
   final String id;

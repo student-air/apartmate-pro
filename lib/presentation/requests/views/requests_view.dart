@@ -44,7 +44,7 @@ class RequestsView extends GetView<RequestsController> {
           labelStyle: AppTextStyles.labelLarge,
           tabs: const [
             Tab(text: 'Owners'),
-            Tab(text: 'Tenants'),
+            Tab(text: 'Staff'),
           ],
         ),
       ),
@@ -64,7 +64,7 @@ class RequestsView extends GetView<RequestsController> {
           child: Obx(() {
             if (controller.isLoading.value &&
                 controller.ownerRequests.isEmpty &&
-                controller.tenantRequests.isEmpty) {
+                controller.staffRequests.isEmpty) {
               return const AppSkeletonList(itemBuilder: UpdateCardSkeleton.new);
             }
             return TabBarView(
@@ -73,13 +73,13 @@ class RequestsView extends GetView<RequestsController> {
                 _RequestsList(
                   items: controller.ownerRequests,
                   emptyTitle: 'No owner requests',
-                  emptySubtitle: 'Owner applications will show up here',
+                  emptySubtitle: 'Owner requests will show up here',
                   onRefresh: controller.refresh,
                 ),
                 _RequestsList(
-                  items: controller.tenantRequests,
-                  emptyTitle: 'No tenant requests',
-                  emptySubtitle: 'Tenant applications will show up here',
+                  items: controller.staffRequests,
+                  emptyTitle: 'No staff requests',
+                  emptySubtitle: 'Staff requests will show up here',
                   onRefresh: controller.refresh,
                 ),
               ],

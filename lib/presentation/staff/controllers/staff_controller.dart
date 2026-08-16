@@ -84,64 +84,74 @@ class StaffController extends GetxController {
   }
 
   Future<void> saveStaff() async {
-    if (nameCtrl.text.trim().isEmpty || phoneCtrl.text.trim().isEmpty || cnicCtrl.text.trim().isEmpty) {
-      staffShakeTrigger.value++;
-      AppSnackbar.error('Missing info', 'Please fill in all required fields');
-      return;
-    }
-    if (selectedRole.value == StaffRole.other && customRoleCtrl.text.trim().isEmpty) {
-      staffShakeTrigger.value++;
-      AppSnackbar.error('Missing info', 'Please enter the role name');
-      return;
-    }
-    if (!Validators.isValidPhone(phoneCtrl.text)) {
-      phoneError.value = 'Use format 03XXXXXXXXX or +92 3XX XXXXXXX';
-      return;
-    }
-    if (!Validators.isValidCnic(cnicCtrl.text)) {
-      cnicError.value = 'Use format 35202-1234567-8';
-      return;
-    }
-
-    String savedId;
-
-    if (isEditing) {
-      final index = staff.indexWhere((s) => s.id == _editingStaffId);
-      final updated = staff[index].copyWith(
-        name: nameCtrl.text.trim(),
-        phone: phoneCtrl.text.trim(),
-        cnic: cnicCtrl.text.trim(),
-        role: selectedRole.value,
-        customRoleLabel: selectedRole.value == StaffRole.other ? customRoleCtrl.text.trim() : null,
-        photoPath: photo.value?.path,
-      );
-      final saved = await _staffRepository.updateStaff(updated);
-      staff[index] = saved;
-      savedId = saved.id;
-    } else {
-      final newStaff = StaffModel(
-        id: 's-${DateTime.now().millisecondsSinceEpoch}',
-        name: nameCtrl.text.trim(),
-        phone: phoneCtrl.text.trim(),
-        cnic: cnicCtrl.text.trim(),
-        role: selectedRole.value,
-        customRoleLabel: selectedRole.value == StaffRole.other ? customRoleCtrl.text.trim() : null,
-        photoPath: photo.value?.path,
-      );
-      final saved = await _staffRepository.addStaff(newStaff);
-      staff.add(saved);
-      savedId = saved.id;
-    }
-
-    resetForm();
-    Get.back();
-
-    justSavedStaffId.value = savedId;
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (justSavedStaffId.value == savedId) justSavedStaffId.value = null;
-    });
+  if (nameCtrl.text.trim().isEmpty ||
+      phoneCtrl.text.trim().isEmpty ||
+      cnicCtrl.text.trim().isEmpty) {
+    staffShakeTrigger.value++;
+    AppSnackbar.error('Missing info', 'Please fill in all required fields');
+    return;
   }
 
+  if (selectedRole.value == StaffRole.other &&
+      customRoleCtrl.text.trim().isEmpty) {
+    staffShakeTrigger.value++;
+    AppSnackbar.error('Missing info', 'Please enter the role name');
+    return;
+  }
+
+  if (!Validators.isValidPhone(phoneCtrl.text)) {
+    phoneError.value = 'Use format 03XXXXXXXXX or +92 3XX XXXXXXX';
+    return;
+  }
+
+  if (!Validators.isValidCnic(cnicCtrl.text)) {
+    cnicError.value = 'Use format 35202-1234567-8';
+    return;
+  }
+
+  String savedId;
+
+  if (isEditing) {
+    final index = staff.indexWhere((s) => s.id == _editingStaffId);
+    final updated = staff[index].copyWith(
+      name: nameCtrl.text.trim(),
+      phone: phoneCtrl.text.trim(),
+      cnic: cnicCtrl.text.trim(),
+      role: selectedRole.value,
+      customRoleLabel:
+          selectedRole.value == StaffRole.other ? customRoleCtrl.text.trim() : null,
+      photoPath: photo.value?.path,
+      // Keep the existing status when editing
+    );
+    final saved = await _staffRepository.updateStaff(updated);
+    staff[index] = saved;
+    savedId = saved.id;
+  } else {
+    // New staff added by Admin → always starts as Pending
+    final newStaff = StaffModel(
+      id: 's-${DateTime.now().millisecondsSinceEpoch}',
+      name: nameCtrl.text.trim(),
+      phone: phoneCtrl.text.trim(),
+      cnic: cnicCtrl.text.trim(),
+      role: selectedRole.value,
+      customRoleLabel:
+          selectedRole.value == StaffRole.other ? customRoleCtrl.text.trim() : null,
+      photoPath: photo.value?.path,
+      status: StaffStatus.pending, // ← important
+    );
+    final saved = await _staffRepository.addStaff(newStaff);
+    staff.add(saved);
+    savedId = saved.id;
+  }
+
+  resetForm();
+  Get.back();
+
+  justSavedStaffId.value = savedId;
+  Future.delayed(const Duration(milliseconds: 1200), () {
+    if (justSavedStaffId.value == savedId) justSavedStaffId.value = null;
+  });
+}
   Future<void> deleteStaff(String staffId) async {
     await _staffRepository.deleteStaff(staffId);
     staff.removeWhere((s) => s.id == staffId);
