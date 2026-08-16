@@ -16,63 +16,135 @@ class CommitteeView extends GetView<CommitteeController> {
   const CommitteeView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryDark,
-        titleSpacing: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text('Committee', style: AppTextStyles.h4.copyWith(color: Colors.white)),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: AppAddFab(
-        onPressed: showSendUpdateSheet,
-      ),
-      bottomNavigationBar: AppBottomNav(
-        activeTab: AppNavTab.home,
-        onHome: () => Get.offNamed(AppRoutes.dashboard),
-        onUpdates: () => Get.offNamed(AppRoutes.updates),
-        onRequests: () => Get.offNamed(AppRoutes.requests),
-        onProfile: () => Get.toNamed(AppRoutes.profile),
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const AppSkeletonList(itemBuilder: StaffTileSkeleton.new);
-        }
-
-        if (controller.members.isEmpty) {
-          return RefreshIndicator(
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: AppColors.background,
+    floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    floatingActionButton: AppAddFab(
+      onPressed: showSendUpdateSheet,
+    ),
+    bottomNavigationBar: AppBottomNav(
+      activeTab: AppNavTab.home,
+      onHome: () => Get.offNamed(AppRoutes.dashboard),
+      onUpdates: () => Get.offNamed(AppRoutes.updates),
+      onRequests: () => Get.offNamed(AppRoutes.requests),
+      onProfile: () => Get.toNamed(AppRoutes.profile),
+    ),
+    body: Column(
+      children: [
+        // ── Header ────────────────────────────────────────────────
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          decoration: const BoxDecoration(
             color: AppColors.primaryDark,
-            onRefresh: controller.refresh,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(AppDimens.headerRadius),
+              bottomRight: Radius.circular(AppDimens.headerRadius),
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
               children: [
+                // Back
+                GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textOnDark.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: AppColors.textOnDark,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Title
+                Expanded(
+                  child: Text(
+                    'Committee',
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.textOnDark,
+                    ),
+                  ),
+                ),
+
+                // Logo
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: const Center(
-                    child: _EmptyCommitteeState(),
+                  width: 46,
+                  height: 46,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGreen,
+                        borderRadius: BorderRadius.circular(AppDimens.radiusSm),
+                      ),
+                      child: const Icon(
+                        Icons.villa_rounded,
+                        size: 22,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
-          );
-        }
-
-        return RefreshIndicator(
-          color: AppColors.primaryDark,
-          onRefresh: controller.refresh,
-          child: ListView.separated(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            itemCount: controller.members.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => _MemberTile(member: controller.members[i]),
           ),
-        );
-      }),
-    );
-  }
+        ),
+
+        // ── Body ──────────────────────────────────────────────────
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoading.value && controller.members.isEmpty) {
+              return const AppSkeletonList(
+                itemBuilder: StaffTileSkeleton.new,
+              );
+            }
+
+            if (controller.members.isEmpty) {
+              return RefreshIndicator(
+                color: AppColors.primaryDark,
+                onRefresh: controller.refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      child: const Center(
+                        child: _EmptyCommitteeState(),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: AppColors.primaryDark,
+              onRefresh: controller.refresh,
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                itemCount: controller.members.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, i) => _MemberTile(member: controller.members[i]),
+              ),
+            );
+          }),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _EmptyCommitteeState extends StatelessWidget {
