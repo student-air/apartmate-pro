@@ -17,17 +17,29 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,49 +52,11 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA9ydkPlhy3t7lSbogPkTV5Z7iTj90mdDU',
-    appId: '1:308746297398:web:8465dc8c3e33b954517897',
-    messagingSenderId: '308746297398',
-    projectId: 'apart-mate-e0ced',
-    authDomain: 'apart-mate-e0ced.firebaseapp.com',
-    storageBucket: 'apart-mate-e0ced.firebasestorage.app',
-    measurementId: 'G-TDN8X33LEW',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC1AlA09mcvJUEa-un6ylvhPH2WNoG_W3M',
-    appId: '1:308746297398:android:a89d09bc20ca740b517897',
-    messagingSenderId: '308746297398',
-    projectId: 'apart-mate-e0ced',
-    storageBucket: 'apart-mate-e0ced.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCrQagtqyiTa8i7xudg7hBp0pkZuX06ALM',
-    appId: '1:308746297398:ios:d2ff37a1d6a8bec1517897',
-    messagingSenderId: '308746297398',
-    projectId: 'apart-mate-e0ced',
-    storageBucket: 'apart-mate-e0ced.firebasestorage.app',
-    iosBundleId: 'com.example.apartmate',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCrQagtqyiTa8i7xudg7hBp0pkZuX06ALM',
-    appId: '1:308746297398:ios:d2ff37a1d6a8bec1517897',
-    messagingSenderId: '308746297398',
-    projectId: 'apart-mate-e0ced',
-    storageBucket: 'apart-mate-e0ced.firebasestorage.app',
-    iosBundleId: 'com.example.apartmate',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyA9ydkPlhy3t7lSbogPkTV5Z7iTj90mdDU',
-    appId: '1:308746297398:web:f68a8bd3c7009ea0517897',
-    messagingSenderId: '308746297398',
-    projectId: 'apart-mate-e0ced',
-    authDomain: 'apart-mate-e0ced.firebaseapp.com',
-    storageBucket: 'apart-mate-e0ced.firebasestorage.app',
-    measurementId: 'G-WGKR0F230R',
+    apiKey: 'AIzaSyAC_qE2D8wCKGFzrDwI9hqeH1z9CXSr7uE',
+    appId: '1:343942532791:android:8605040da1fce79575c732',
+    messagingSenderId: '343942532791',
+    projectId: 'apart-mate-e3bca',
+    storageBucket: 'apart-mate-e3bca.firebasestorage.app',
   );
 }
