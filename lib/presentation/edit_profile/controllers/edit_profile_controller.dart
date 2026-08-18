@@ -1,9 +1,10 @@
 import 'dart:io';
-
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:apartmate/core/constants/app_colors.dart';
+import 'package:apartmate/core/utils/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:apartmate/core/utils/app_snackbar.dart';
 import 'package:apartmate/core/utils/validators.dart';
 import 'package:apartmate/data/models/user_model.dart';
 import 'package:apartmate/domain/repositories/i_auth_repository.dart';
@@ -73,17 +74,42 @@ class EditProfileController extends GetxController {
 }
 
   Future<void> pickPhoto() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (picked == null) return;
-    final file = File(picked.path);
-    final sizeInBytes = await file.length();
-    if (sizeInBytes > maxPhotoSizeBytes) {
-      AppSnackbar.error('File too large', 'Photo must be under 3MB');
-      return;
-    }
-    photo.value = file;
+  final picked = await ImagePicker().pickImage(
+    source: ImageSource.gallery,
+    imageQuality: 95, // crop first; compress after if needed
+  );
+  if (picked == null) return;
+
+  final cropped = await ImageCropper().cropImage(
+    sourcePath: picked.path,
+    aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // square avatar
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Crop photo',
+        toolbarColor: AppColors.primaryDark,
+        toolbarWidgetColor: AppColors.textOnDark,
+        activeControlsWidgetColor: AppColors.accentGreen,
+        initAspectRatio: CropAspectRatioPreset.square,
+        lockAspectRatio: true,
+      ),
+      IOSUiSettings(
+        title: 'Crop photo',
+        aspectRatioLockEnabled: true,
+      ),
+    ],
+  );
+
+  if (cropped == null) return; // user cancelled crop
+
+  final file = File(cropped.path);
+  final sizeInBytes = await file.length();
+  if (sizeInBytes > maxPhotoSizeBytes) {
+    AppSnackbar.error('File too large', 'Photo must be under 3MB');
+    return;
   }
 
+  photo.value = file;
+}
   Future<void> save() async {
     if (ownerNameCtrl.text.trim().isEmpty ||
         fullNameCtrl.text.trim().isEmpty ||

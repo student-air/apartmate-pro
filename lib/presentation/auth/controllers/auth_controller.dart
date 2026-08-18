@@ -44,13 +44,32 @@ class AuthController extends GetxController {
   void toggleSignupPasswordVisibility() => isSignupPasswordVisible.toggle();
   void toggleConfirmPasswordVisibility() => isConfirmPasswordVisible.toggle();
 
+  /// Shared post-auth routing:
+  /// new user → Signup
+  /// incomplete signup (no phone) → Signup
+  /// no society → Society Register
+  /// not approved → Registration Status
+  /// approved + no buildings → Society Buildings
+  /// approved + buildings → Dashboard
   Future<void> _navigateAfterAuth({bool isNewUser = false}) async {
     if (isNewUser) {
-      Get.offAllNamed(AppRoutes.societyRegister);
+      Get.offAllNamed(AppRoutes.signup);
       return;
     }
 
     try {
+      final user = _authRepository.currentUser;
+
+      // Signup data incomplete → finish Signup first
+      final hasSignupData = user != null &&
+          user.fullName.trim().isNotEmpty &&
+          user.phone.trim().isNotEmpty;
+
+      if (!hasSignupData) {
+        Get.offAllNamed(AppRoutes.signup);
+        return;
+      }
+
       final society = await Get.find<ISocietyRepository>().getCurrentSociety();
 
       if (society == null) {
@@ -60,6 +79,12 @@ class AuthController extends GetxController {
 
       if (society.registrationStatus != SocietyRegistrationStatus.approved) {
         Get.offAllNamed(AppRoutes.registrationStatus);
+        return;
+      }
+
+      final buildings = await Get.find<ISocietyRepository>().getBuildings();
+      if (buildings.isEmpty) {
+        Get.offAllNamed(AppRoutes.societyBuildings);
         return;
       }
 
@@ -117,8 +142,8 @@ class AuthController extends GetxController {
   Future<void> signUpWithGoogle() async {
     isLoading.value = true;
     try {
-      await _authRepository.loginWithGoogle();
-      Get.offNamed(AppRoutes.signupHandoff, arguments: 'Google');
+      final result = await _authRepository.loginWithGoogle();
+      await _navigateAfterAuth(isNewUser: result.isNewUser);
     } catch (e) {
       final msg = e.toString();
       if (!msg.contains('aborted-by-user') &&
@@ -135,7 +160,7 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await _authRepository.loginWithApple();
-      Get.offNamed(AppRoutes.signupHandoff, arguments: 'Apple');
+      await _navigateAfterAuth();
     } finally {
       isLoading.value = false;
     }
@@ -193,7 +218,10 @@ class AuthController extends GetxController {
     isResettingPassword.value = true;
     try {
       await _authRepository.sendPasswordResetEmail(result);
-      AppSnackbar.success('Email sent', 'Check $result for a password reset link');
+      AppSnackbar.success(
+        'Email sent',
+        'Check $result for a password reset link',
+      );
     } catch (e) {
       AppSnackbar.error('Reset failed', e.toString());
     } finally {
@@ -222,20 +250,38 @@ class AuthController extends GetxController {
       AppSnackbar.error('Password mismatch', 'Passwords do not match');
       return;
     }
-    final passwordError = Validators.passwordErrorMessage(signupPasswordCtrl.text);
+    final passwordError =
+        Validators.passwordErrorMessage(signupPasswordCtrl.text);
     if (passwordError != null) {
       AppSnackbar.error('Weak password', passwordError);
       return;
     }
+
     isLoading.value = true;
     try {
-      await _authRepository.signUp(
-        fullName: fullNameCtrl.text.trim(),
-        email: emailCtrl.text.trim(),
-        phone: phoneCtrl.text.trim(),
-        password: signupPasswordCtrl.text,
-      );
-      Get.toNamed(AppRoutes.signupHandoff, arguments: 'Email');
+      // If already signed in with Google, only complete profile
+      final existing = _authRepository.currentUser;
+      if (existing != null) {
+        await _authRepository.updateProfile(
+          existing.copyWith(
+            fullName: fullNameCtrl.text.trim(),
+            email: emailCtrl.text.trim(),
+            phone: phoneCtrl.text.trim(),
+          ),
+        );
+      } else {
+        await _authRepository.signUp(
+          fullName: fullNameCtrl.text.trim(),
+          email: emailCtrl.text.trim(),
+          phone: phoneCtrl.text.trim(),
+          password: signupPasswordCtrl.text,
+        );
+      }
+
+      // After signup data is saved → Society Register
+      Get.offAllNamed(AppRoutes.societyRegister);
+    } catch (e) {
+      AppSnackbar.error('Sign up failed', e.toString());
     } finally {
       isLoading.value = false;
     }

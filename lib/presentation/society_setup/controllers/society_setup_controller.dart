@@ -14,7 +14,7 @@ class SocietySetupController extends GetxController {
   bool get hasConfiguredBuilding => buildings.any((b) => b.isConfigured);
 
   final celebrationTrigger = 0.obs;
-  bool _hasCelebratedFirstBuilding = false; 
+  bool _hasCelebratedFirstBuilding = false;
 
   @override
   void onInit() {
@@ -42,25 +42,35 @@ class SocietySetupController extends GetxController {
     newBuildingName.value = '';
   }
 
-  Future<void> saveBuildingDetails(String buildingId, BuildingDetailsModel details) async {
+  Future<void> saveBuildingDetails(
+    String buildingId,
+    BuildingDetailsModel details,
+  ) async {
     final wasFirstConfig = !hasConfiguredBuilding;
 
-    final updated = await _societyRepository.saveBuildingDetails(buildingId, details);
+    final updated =
+        await _societyRepository.saveBuildingDetails(buildingId, details);
     final index = buildings.indexWhere((b) => b.id == buildingId);
     if (index != -1) buildings[index] = updated;
 
     justSavedBuildingId.value = buildingId;
     Future.delayed(const Duration(milliseconds: 1200), () {
-      if (justSavedBuildingId.value == buildingId) justSavedBuildingId.value = null;
+      if (justSavedBuildingId.value == buildingId) {
+        justSavedBuildingId.value = null;
+      }
     });
 
-    if (wasFirstConfig && hasConfiguredBuilding && !_hasCelebratedFirstBuilding) {
+    if (wasFirstConfig &&
+        hasConfiguredBuilding &&
+        !_hasCelebratedFirstBuilding) {
       _hasCelebratedFirstBuilding = true;
       celebrationTrigger.value++;
     }
   }
+
   Future<void> renameBuilding(String buildingId, String newName) async {
-    final updated = await _societyRepository.renameBuilding(buildingId, newName);
+    final updated =
+        await _societyRepository.renameBuilding(buildingId, newName);
     final index = buildings.indexWhere((b) => b.id == buildingId);
     if (index != -1) buildings[index] = updated;
   }
