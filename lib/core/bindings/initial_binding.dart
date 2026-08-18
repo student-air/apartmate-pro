@@ -10,7 +10,7 @@ import 'package:apartmate/data/repositories/local_dashboard_repository.dart';
 import 'package:apartmate/data/repositories/local_update_repository.dart';
 import 'package:apartmate/domain/repositories/i_update_repository.dart';
 import 'package:apartmate/presentation/updates/controllers/updates_badge_controller.dart';
-import 'package:apartmate/data/repositories/local_request_repository.dart';
+import 'package:apartmate/data/repositories/firebase_request_repository.dart';
 import 'package:apartmate/domain/repositories/i_request_repository.dart';
 import 'package:apartmate/data/repositories/local_resident_repository.dart';
 import 'package:apartmate/domain/repositories/i_resident_repository.dart';
@@ -36,7 +36,7 @@ class InitialBinding extends Bindings {
     );
     Get.put<IUpdateRepository>(LocalUpdateRepository(), permanent: true);
     Get.put<UpdatesBadgeController>(UpdatesBadgeController(), permanent: true);
-    Get.put<IRequestRepository>(LocalRequestRepository(), permanent: true);
+    Get.put<IRequestRepository>(FirebaseRequestRepository(), permanent: true);
     Get.put<IResidentRepository>(LocalResidentRepository(), permanent: true);
     Get.put<IComplaintRepository>(LocalComplaintRepository(), permanent: true);
     Get.put<IOwnerRepository>(LocalOwnerRepository(), permanent: true);
