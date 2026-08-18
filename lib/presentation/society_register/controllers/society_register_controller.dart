@@ -26,6 +26,14 @@ class SocietyRegisterController extends GetxController {
   final selectedState = ''.obs;
   final selectedCity = ''.obs;
 
+  final takesMaintenance = false.obs; // No by default
+final maintenanceAmountCtrl = TextEditingController();
+
+void setTakesMaintenance(bool value) {
+  takesMaintenance.value = value;
+  if (!value) maintenanceAmountCtrl.clear();
+}
+
   void setCountry(String value) => selectedCountry.value = value;
   void setState(String value) => selectedState.value = value;
   void setCity(String value) => selectedCity.value = value;
@@ -41,6 +49,7 @@ class SocietyRegisterController extends GetxController {
     super.onInit();
     _prefillIfEditing();
     contactCtrl.addListener(() => phoneError.value = null);
+
   }
 
   Future<void> pickOwnerPhotoFromCamera() => _pickFrom(ImageSource.camera);
@@ -66,6 +75,11 @@ class SocietyRegisterController extends GetxController {
     addressCtrl.text = existing.address;
     contactCtrl.text = existing.contactNumber;
     descriptionCtrl.text = existing.description ?? '';
+    takesMaintenance.value = existing.takesMaintenancePayment;
+if (existing.maintenanceAmountRs != null) {
+  maintenanceAmountCtrl.text =
+      existing.maintenanceAmountRs!.toStringAsFixed(0);
+}
   }
 
   Future<void> submit() async {
@@ -82,6 +96,15 @@ class SocietyRegisterController extends GetxController {
       phoneError.value = 'Use format 03XXXXXXXXX or +92 3XX XXXXXXX';
       return;
     }
+
+    double? maintenanceAmount;
+if (takesMaintenance.value) {
+  maintenanceAmount = double.tryParse(maintenanceAmountCtrl.text.trim());
+  if (maintenanceAmount == null || maintenanceAmount <= 0) {
+    AppSnackbar.info('Maintenance amount', 'Enter a valid amount in Rs');
+    return;
+  }
+}
     
     isSubmitting.value = true;
     try {
@@ -97,6 +120,10 @@ class SocietyRegisterController extends GetxController {
           description: descriptionCtrl.text.trim(),
           submittedAt: DateTime.now(),
           ownerPhotoPath: ownerPhoto.value?.path,
+          takesMaintenancePayment: takesMaintenance.value,
+          maintenanceAmountRs: takesMaintenance.value
+            ? double.tryParse(maintenanceAmountCtrl.text.trim())
+            : null, 
         ),
       );
       Get.toNamed(AppRoutes.registrationStatus);
@@ -114,6 +141,7 @@ class SocietyRegisterController extends GetxController {
     cityCtrl.dispose();
     contactCtrl.dispose();
     descriptionCtrl.dispose();
+    maintenanceAmountCtrl.dispose();
     super.onClose();
   }
 }

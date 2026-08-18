@@ -12,6 +12,8 @@ class SocietyModel {
   final String? description;
   final String? ownerPhotoPath;
   final String joinCode;
+  final bool takesMaintenancePayment;
+final double? maintenanceAmountRs; // null if No
   final SocietyRegistrationStatus registrationStatus;
   final DateTime submittedAt;
 
@@ -28,6 +30,8 @@ class SocietyModel {
     this.joinCode = '',
     this.registrationStatus = SocietyRegistrationStatus.pendingReview,
     required this.submittedAt,
+    this.takesMaintenancePayment = false,
+    this.maintenanceAmountRs,
   });
 
   SocietyModel copyWith({

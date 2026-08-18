@@ -120,6 +120,8 @@ class FirebaseSocietyRepository implements ISocietyRepository {
         'description': s.description,
         'ownerPhotoPath': s.ownerPhotoPath,
         'joinCode': s.joinCode,
+        'takesMaintenancePayment': s.takesMaintenancePayment,
+        'maintenanceAmountRs': s.maintenanceAmountRs,
         'registrationStatus': s.registrationStatus.name,
         'submittedAt': Timestamp.fromDate(s.submittedAt),
       };
@@ -136,6 +138,8 @@ class FirebaseSocietyRepository implements ISocietyRepository {
       description: data['description'],
       ownerPhotoPath: data['ownerPhotoPath'],
       joinCode: data['joinCode'] ?? '',
+      takesMaintenancePayment: data['takesMaintenancePayment'] == true,
+      maintenanceAmountRs: (data['maintenanceAmountRs'] as num?)?.toDouble(),
       registrationStatus: SocietyRegistrationStatus.values.firstWhere(
         (e) => e.name == data['registrationStatus'],
         orElse: () => SocietyRegistrationStatus.pendingReview,

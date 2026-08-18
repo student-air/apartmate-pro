@@ -26,7 +26,10 @@ class SocietyRegisterView extends GetView<SocietyRegisterController> {
           children: [
             Image.asset('assets/images/logo.png', height: 28),
             const SizedBox(width: 8),
-            Text(AppStrings.registerSociety, style: AppTextStyles.h4.copyWith(color: Colors.white)),
+            Text(
+              AppStrings.registerSociety,
+              style: AppTextStyles.h4.copyWith(color: Colors.white),
+            ),
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -65,7 +68,10 @@ class SocietyRegisterView extends GetView<SocietyRegisterController> {
                             maxLines: 2,
                           ),
                           const SizedBox(height: AppDimens.space16),
-                          Text('Country,State & City', style: AppTextStyles.labelLarge),
+                          Text(
+                            'Country, State & City',
+                            style: AppTextStyles.labelLarge,
+                          ),
                           const SizedBox(height: AppDimens.space6),
                           SizedBox(
                             width: double.infinity,
@@ -75,9 +81,12 @@ class SocietyRegisterView extends GetView<SocietyRegisterController> {
                               countryHint: 'Select Country',
                               stateHint: 'Select State',
                               cityHint: 'Select City',
-                              onCountryChanged: (value) => controller.setCountry(value),
-                              onStateChanged: (value) => controller.setState(value),
-                              onCityChanged: (value) => controller.setCity(value),
+                              onCountryChanged: (value) =>
+                                  controller.setCountry(value),
+                              onStateChanged: (value) =>
+                                  controller.setState(value),
+                              onCityChanged: (value) =>
+                                  controller.setCity(value),
                             ),
                           ),
                           const SizedBox(height: AppDimens.space16),
@@ -89,23 +98,113 @@ class SocietyRegisterView extends GetView<SocietyRegisterController> {
                           ),
                           Obx(() {
                             final error = controller.phoneError.value;
-                            if (error == null) return const SizedBox.shrink();
+                            if (error == null) {
+                              return const SizedBox.shrink();
+                            }
                             return Padding(
-                              padding: const EdgeInsets.only(top: AppDimens.space8),
+                              padding: const EdgeInsets.only(
+                                top: AppDimens.space8,
+                              ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.error_outline, size: 14, color: AppColors.danger),
+                                  const Icon(
+                                    Icons.error_outline,
+                                    size: 14,
+                                    color: AppColors.danger,
+                                  ),
                                   const SizedBox(width: AppDimens.space4),
                                   Expanded(
                                     child: Text(
                                       error,
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.danger),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.danger,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             );
                           }),
+
+                          // ── Maintenance (before description) ──
+                          const SizedBox(height: AppDimens.space16),
+                          Text(
+                            'Do you take maintenance payment?',
+                            style: AppTextStyles.labelLarge,
+                          ),
+                          const SizedBox(height: AppDimens.space8),
+                          Obx(() {
+                            final yes = controller.takesMaintenance.value;
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: ChoiceChip(
+                                    label: const Text('Yes'),
+                                    selected: yes,
+                                    onSelected: (_) =>
+                                        controller.setTakesMaintenance(true),
+                                    selectedColor: AppColors.primaryDark
+                                        .withValues(alpha: 0.15),
+                                    labelStyle: AppTextStyles.labelLarge.copyWith(
+                                      color: yes
+                                          ? AppColors.primaryDark
+                                          : AppColors.textSecondary,
+                                      fontWeight: yes
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                                    side: BorderSide(
+                                      color: yes
+                                          ? AppColors.primaryDark
+                                          : AppColors.borderLight,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ChoiceChip(
+                                    label: const Text('No'),
+                                    selected: !yes,
+                                    onSelected: (_) =>
+                                        controller.setTakesMaintenance(false),
+                                    selectedColor: AppColors.primaryDark
+                                        .withValues(alpha: 0.15),
+                                    labelStyle: AppTextStyles.labelLarge.copyWith(
+                                      color: !yes
+                                          ? AppColors.primaryDark
+                                          : AppColors.textSecondary,
+                                      fontWeight: !yes
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                    ),
+                                    side: BorderSide(
+                                      color: !yes
+                                          ? AppColors.primaryDark
+                                          : AppColors.borderLight,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                          Obx(() {
+                            if (!controller.takesMaintenance.value) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppDimens.space16,
+                              ),
+                              child: AppTextField(
+                                label: 'Maintenance amount (Rs)',
+                                hint: 'e.g. 5000',
+                                controller: controller.maintenanceAmountCtrl,
+                                keyboardType: TextInputType.number,
+                              ),
+                            );
+                          }),
+
+                          // ── Description ──
                           const SizedBox(height: AppDimens.space16),
                           AppTextField(
                             label: AppStrings.descriptionOptional,
@@ -127,7 +226,9 @@ class SocietyRegisterView extends GetView<SocietyRegisterController> {
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
-                border: Border(top: BorderSide(color: AppColors.borderLight)),
+                border: Border(
+                  top: BorderSide(color: AppColors.borderLight),
+                ),
               ),
               child: Obx(
                 () => AppPrimaryButton(
@@ -165,11 +266,20 @@ class _OwnerPhotoPicker extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.primaryDark.withValues(alpha: 0.05),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primaryDark.withValues(alpha: 0.3), width: 2),
+                    border: Border.all(
+                      color: AppColors.primaryDark.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
                   ),
                   child: file != null
-                      ? ClipOval(child: Image.file(file, fit: BoxFit.cover))
-                      : Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.primaryDark.withValues(alpha: 0.5)),
+                      ? ClipOval(
+                          child: Image.file(file, fit: BoxFit.cover),
+                        )
+                      : Icon(
+                          Icons.camera_alt_outlined,
+                          size: 28,
+                          color: AppColors.primaryDark.withValues(alpha: 0.5),
+                        ),
                 ),
               ),
               Positioned(
@@ -183,9 +293,15 @@ class _OwnerPhotoPicker extends StatelessWidget {
                     decoration: const BoxDecoration(
                       color: AppColors.primaryDark,
                       shape: BoxShape.circle,
-                      border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2)),
+                      border: Border.fromBorderSide(
+                        BorderSide(color: Colors.white, width: 2),
+                      ),
                     ),
-                    child: const Icon(Icons.edit, size: 13, color: Colors.white),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 13,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -195,13 +311,21 @@ class _OwnerPhotoPicker extends StatelessWidget {
         const SizedBox(height: AppDimens.space8),
         Text('Add Owner Photo', style: AppTextStyles.labelLarge),
         const SizedBox(height: 2),
-        Text('PNG or JPG, up to 3MB', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+        Text(
+          'PNG or JPG, up to 3MB',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }
 }
 
-void _showPhotoSourceSheet(BuildContext context, SocietyRegisterController controller) {
+void _showPhotoSourceSheet(
+  BuildContext context,
+  SocietyRegisterController controller,
+) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.white,
@@ -221,7 +345,7 @@ void _showPhotoSourceSheet(BuildContext context, SocietyRegisterController contr
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
+              leading: const Icon(Icons.camera_alt_rounded),
               title: const Text('Upload from Device'),
               onTap: () {
                 Navigator.pop(sheetContext);

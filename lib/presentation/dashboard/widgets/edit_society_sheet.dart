@@ -152,6 +152,49 @@ class EditSocietySheet extends StatelessWidget {
                             );
                           }),
                           const SizedBox(height: AppDimens.space16),
+Text(
+  'Do you take maintenance payment?',
+  style: AppTextStyles.labelLarge,
+),
+const SizedBox(height: AppDimens.space8),
+Obx(() {
+  final yes = controller.takesMaintenance.value;
+  return Row(
+    children: [
+      Expanded(
+        child: ChoiceChip(
+          label: const Text('Yes'),
+          selected: yes,
+          onSelected: (_) => controller.setTakesMaintenance(true),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: ChoiceChip(
+          label: const Text('No'),
+          selected: !yes,
+          onSelected: (_) => controller.setTakesMaintenance(false),
+        ),
+      ),
+    ],
+  );
+}),
+Obx(() {
+  if (!controller.takesMaintenance.value) {
+    return const SizedBox.shrink();
+  }
+  return Padding(
+    padding: const EdgeInsets.only(top: AppDimens.space16),
+    child: AppTextField(
+      label: 'Maintenance amount (Rs)',
+      hint: 'e.g. 5000',
+      controller: controller.maintenanceAmountCtrl,
+      keyboardType: TextInputType.number,
+    ),
+  );
+}),
+
+                          const SizedBox(height: AppDimens.space16),
                           AppTextField(
                             label: AppStrings.descriptionOptional,
                             hint: AppStrings.descriptionHint,
