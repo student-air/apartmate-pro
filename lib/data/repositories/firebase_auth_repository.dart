@@ -1,3 +1,5 @@
+// lib/data/repositories/firebase_auth_repository.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -19,7 +21,7 @@ class FirebaseAuthRepository implements IAuthRepository {
     if (_googleInitialized) return;
     await _googleSignIn.initialize(
       serverClientId:
-        '308746297398-jpobogk3cmajv09lvmq13rmdoemhdln0.apps.googleusercontent.com',
+          '308746297398-jpobogk3cmajv09lvmq13rmdoemhdln0.apps.googleusercontent.com',
     );
     _googleInitialized = true;
   }
@@ -58,6 +60,7 @@ class FirebaseAuthRepository implements IAuthRepository {
       'phone': model.phone,
       'role': model.role,
       'photoPath': model.photoPath,
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
     _cached = model;
@@ -126,6 +129,7 @@ class FirebaseAuthRepository implements IAuthRepository {
       'phone': model.phone,
       'role': model.role,
       'photoPath': null,
+      'updatedAt': FieldValue.serverTimestamp(),
     });
 
     _cached = model;
@@ -146,6 +150,7 @@ class FirebaseAuthRepository implements IAuthRepository {
       'phone': updated.phone,
       'role': updated.role,
       'photoPath': updated.photoPath,
+      'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
     _cached = UserModel(
